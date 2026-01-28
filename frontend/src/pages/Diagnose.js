@@ -7,6 +7,7 @@ function Diagnose() {
 
   const [symptoms, setSymptoms] = useState("");
   const [result, setResult] = useState("");
+  const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [image, setImage] = useState("");
@@ -16,6 +17,7 @@ function Diagnose() {
   const handleSymptomSubmit = async () => {
     setLoading(true);
     setResult("");
+    setAnalysisData(null);
 
     try {
       const response = await fetch("http://127.0.0.1:5000/symptom-check", {
@@ -24,10 +26,67 @@ function Diagnose() {
         body: JSON.stringify({ symptoms }),
       });
 
-      const data = await response.json();
-      setResult(data.pcos_risk);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let streamedText = "";
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        
+        // Keep the last incomplete line in the buffer
+        buffer = lines[lines.length - 1];
+
+        for (let i = 0; i < lines.length - 1; i++) {
+          const line = lines[i];
+          if (line.startsWith("data: ")) {
+            const data = line.substring(6);
+
+            // Check if it's the final JSON event
+            if (data.startsWith("{")) {
+              try {
+                const finalData = JSON.parse(data);
+                setAnalysisData(finalData);
+              } catch (e) {
+                // Not JSON, treat as text
+                streamedText += data;
+                setResult(streamedText);
+              }
+            } else if (data.trim()) {
+              streamedText += data;
+              setResult(streamedText);
+            }
+          }
+        }
+      }
+      
+      // Process any remaining data in buffer
+      if (buffer.startsWith("data: ")) {
+        const data = buffer.substring(6);
+        if (data.startsWith("{")) {
+          try {
+            const finalData = JSON.parse(data);
+            setAnalysisData(finalData);
+          } catch (e) {
+            streamedText += data;
+            setResult(streamedText);
+          }
+        } else if (data.trim()) {
+          streamedText += data;
+          setResult(streamedText);
+        }
+      }
     } catch (error) {
       setResult("Error connecting to backend. Please ensure the server is running.");
+      console.error("Error:", error);
     }
 
     setLoading(false);
@@ -42,6 +101,12 @@ function Diagnose() {
     setUploading(true);
     const formData = new FormData();
     formData.append("image", image);
+    
+    // Add analysis data to the request
+    if (analysisData) {
+      formData.append("pcos_risk_class", analysisData.pcos_risk_class);
+      formData.append("confidence", analysisData.confidence);
+    }
 
     try {
       const response = await fetch("http://127.0.0.1:5000/upload-ultrasound", {
@@ -49,10 +114,11 @@ function Diagnose() {
         body: formData,
       });
 
-      const data = await response.json();
-      setUploadMsg(data.message);
+      const uploadData = await response.json();
+      setUploadMsg(uploadData.message);
     } catch (error) {
       setUploadMsg("Error uploading image. Please try again.");
+      console.error("Error:", error);
     }
 
     setUploading(false);
@@ -256,22 +322,44 @@ function Diagnose() {
                   ) : (
                     <Shield style={{ width: 20, height: 20, color: "var(--accent)", flexShrink: 0, marginTop: "2px" }} />
                   )}
-                  <div>
+                  <div style={{ width: "100%" }}>
                     <p style={{ 
                       fontWeight: 600,
-                      marginBottom: "4px",
+                      marginBottom: "12px",
                       color: "var(--text-dark)",
                       fontSize: "15px"
                     }}>
-                      Analysis Result
+                      AI Analysis
                     </p>
                     <p style={{ 
                       color: result.includes("Error") ? "#dc2626" : "var(--text-muted)",
                       fontSize: "14px",
-                      lineHeight: 1.6
+                      lineHeight: 1.6,
+                      marginBottom: analysisData ? "16px" : "0"
                     }}>
                       {result}
                     </p>
+                    {analysisData && (
+                      <div style={{
+                        background: "rgba(255, 255, 255, 0.4)",
+                        padding: "12px",
+                        borderRadius: "var(--radius-md)",
+                        fontSize: "13px",
+                        color: "var(--text-dark)"
+                      }}>
+                        <p style={{ margin: "4px 0", fontWeight: 500 }}>
+                          Risk Class: <span style={{ fontWeight: 700, color: analysisData.pcos_risk_class === 1 ? "#ef4444" : "#22c55e" }}>
+                            {analysisData.pcos_risk_class === 1 ? "HIGH" : "LOW"}
+                          </span>
+                        </p>
+                        <p style={{ margin: "4px 0" }}>
+                          Confidence: <span style={{ fontWeight: 600 }}>{analysisData.confidence}%</span>
+                        </p>
+                        <p style={{ margin: "4px 0", color: "var(--text-muted)", fontSize: "12px" }}>
+                          Model: {analysisData.model}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
