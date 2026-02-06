@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowLeft, FileText, Heart, Shield, Sparkles, Upload } from "lucide-react";
+import { AlertCircle, ArrowLeft, FileText, Heart, Shield, Sparkles, Upload, Loader } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,9 +6,10 @@ function Diagnose() {
   const navigate = useNavigate();
 
   const [symptoms, setSymptoms] = useState("");
-  const [result, setResult] = useState("");
+  const [resultSections, setResultSections] = useState([]);
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
 
   const [image, setImage] = useState("");
   const [uploadMsg, setUploadMsg] = useState("");
@@ -16,7 +17,8 @@ function Diagnose() {
 
   const handleSymptomSubmit = async () => {
     setLoading(true);
-    setResult("");
+    setIsStreaming(true);
+    setResultSections([]);
     setAnalysisData(null);
 
     try {
@@ -32,7 +34,6 @@ function Diagnose() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let streamedText = "";
       let buffer = "";
 
       while (true) {
@@ -50,45 +51,47 @@ function Diagnose() {
           if (line.startsWith("data: ")) {
             const data = line.substring(6);
 
-            // Check if it's the final JSON event
+            // Check if it's JSON
             if (data.startsWith("{")) {
               try {
-                const finalData = JSON.parse(data);
-                setAnalysisData(finalData);
+                const chunk = JSON.parse(data);
+                
+                if (chunk.type === "section_header") {
+                  // Add section header
+                  setResultSections(prev => [...prev, {
+                    id: Date.now() + Math.random(),
+                    type: "header",
+                    content: chunk.content
+                  }]);
+                } else if (chunk.type === "text") {
+                  // Add text content
+                  setResultSections(prev => [...prev, {
+                    id: Date.now() + Math.random(),
+                    type: "text",
+                    content: chunk.content
+                  }]);
+                } else if (chunk.type === "final_result") {
+                  // Final result
+                  setAnalysisData(chunk.data);
+                  setIsStreaming(false);
+                }
               } catch (e) {
-                // Not JSON, treat as text
-                streamedText += data;
-                setResult(streamedText);
+                console.error("Parse error:", e);
               }
-            } else if (data.trim()) {
-              streamedText += data;
-              setResult(streamedText);
             }
           }
         }
       }
-      
-      // Process any remaining data in buffer
-      if (buffer.startsWith("data: ")) {
-        const data = buffer.substring(6);
-        if (data.startsWith("{")) {
-          try {
-            const finalData = JSON.parse(data);
-            setAnalysisData(finalData);
-          } catch (e) {
-            streamedText += data;
-            setResult(streamedText);
-          }
-        } else if (data.trim()) {
-          streamedText += data;
-          setResult(streamedText);
-        }
-      }
     } catch (error) {
-      setResult("Error connecting to backend. Please ensure the server is running.");
+      setResultSections([{
+        id: Date.now(),
+        type: "error",
+        content: "Error connecting to backend. Please ensure the server is running."
+      }]);
       console.error("Error:", error);
     }
 
+    setIsStreaming(false);
     setLoading(false);
   };
 
@@ -306,62 +309,153 @@ function Diagnose() {
               {loading ? "Analyzing Symptoms..." : "Check PCOS Risk"}
             </button>
 
-            {result && (
-              <div style={{ 
-                marginTop: "24px",
-                padding: "20px",
-                background: result.includes("Error") 
-                  ? "rgba(239, 68, 68, 0.08)" 
-                  : "linear-gradient(135deg, rgba(212, 99, 138, 0.08) 0%, rgba(90, 154, 168, 0.08) 100%)",
-                borderRadius: "var(--radius-md)",
-                border: `1px solid ${result.includes("Error") ? "rgba(239, 68, 68, 0.2)" : "var(--border-light)"}`
-              }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                  {result.includes("Error") ? (
-                    <AlertCircle style={{ width: 20, height: 20, color: "#ef4444", flexShrink: 0, marginTop: "2px" }} />
-                  ) : (
-                    <Shield style={{ width: 20, height: 20, color: "var(--accent)", flexShrink: 0, marginTop: "2px" }} />
+            {(resultSections.length > 0 || isStreaming) && (
+              <div style={{ marginTop: "32px" }}>
+                {/* Streaming Sections */}
+                <div style={{
+                  background: "linear-gradient(135deg, rgba(212, 99, 138, 0.05) 0%, rgba(90, 154, 168, 0.05) 100%)",
+                  border: "1px solid var(--border-light)",
+                  borderRadius: "var(--radius-lg)",
+                  padding: "24px",
+                  overflow: "hidden"
+                }}>
+                  {resultSections.map((section, idx) => (
+                    <div
+                      key={section.id}
+                      style={{
+                        marginBottom: idx < resultSections.length - 1 ? "24px" : "0",
+                        animation: "slideIn 0.4s ease-out"
+                      }}
+                    >
+                      {section.type === "header" && (
+                        <div style={{
+                          fontSize: "16px",
+                          fontWeight: 700,
+                          color: "var(--primary)",
+                          marginBottom: "12px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px"
+                        }}>
+                          {section.content}
+                        </div>
+                      )}
+                      {section.type === "text" && (
+                        <p style={{
+                          fontSize: "14px",
+                          lineHeight: 1.7,
+                          color: "var(--text-muted)",
+                          margin: 0,
+                          paddingLeft: "12px",
+                          borderLeft: "3px solid rgba(212, 99, 138, 0.3)"
+                        }}>
+                          {section.content}
+                        </p>
+                      )}
+                      {section.type === "error" && (
+                        <div style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "10px",
+                          color: "#dc2626"
+                        }}>
+                          <AlertCircle style={{ width: 20, height: 20, flexShrink: 0, marginTop: "2px" }} />
+                          <p style={{ margin: 0, fontSize: "14px" }}>{section.content}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Typing Indicator */}
+                  {isStreaming && (
+                    <div style={{
+                      marginTop: "16px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      color: "var(--primary)"
+                    }}>
+                      <Loader style={{ width: 16, height: 16, animation: "spin 1s linear infinite" }} />
+                      <span style={{ fontSize: "13px", fontWeight: 500 }}>Processing your analysis...</span>
+                    </div>
                   )}
-                  <div style={{ width: "100%" }}>
-                    <p style={{ 
-                      fontWeight: 600,
-                      marginBottom: "12px",
-                      color: "var(--text-dark)",
-                      fontSize: "15px"
-                    }}>
-                      AI Analysis
-                    </p>
-                    <p style={{ 
-                      color: result.includes("Error") ? "#dc2626" : "var(--text-muted)",
-                      fontSize: "14px",
-                      lineHeight: 1.6,
-                      marginBottom: analysisData ? "16px" : "0"
-                    }}>
-                      {result}
-                    </p>
-                    {analysisData && (
-                      <div style={{
-                        background: "rgba(255, 255, 255, 0.4)",
-                        padding: "12px",
-                        borderRadius: "var(--radius-md)",
+                </div>
+
+                {/* Result Card - Matching Figure Format */}
+                {analysisData && (
+                  <div style={{
+                    marginTop: "24px",
+                    background: "linear-gradient(135deg, rgba(212, 99, 138, 0.05) 0%, rgba(90, 154, 168, 0.05) 100%)",
+                    border: "1px solid var(--border-light)",
+                    borderRadius: "var(--radius-lg)",
+                    padding: "24px",
+                    overflow: "hidden",
+                    animation: "slideIn 0.6s ease-out"
+                  }}>
+                    {/* Result Header */}
+                    <div style={{ marginBottom: "20px" }}>
+                      <p style={{ 
                         fontSize: "13px",
-                        color: "var(--text-dark)"
+                        fontWeight: 500,
+                        color: "var(--text-muted)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        margin: "0 0 8px 0"
                       }}>
-                        <p style={{ margin: "4px 0", fontWeight: 500 }}>
-                          Risk Class: <span style={{ fontWeight: 700, color: analysisData.pcos_risk_class === 1 ? "#ef4444" : "#22c55e" }}>
-                            {analysisData.pcos_risk_class === 1 ? "HIGH" : "LOW"}
-                          </span>
+                        Assessment Result
+                      </p>
+                      <h3 style={{ 
+                        fontSize: "20px",
+                        fontWeight: 700,
+                        color: analysisData.pcos_risk_class === 1 ? "#dc2626" : "#22c55e",
+                        margin: "0 0 4px 0"
+                      }}>
+                        PCOS Risk: {analysisData.result?.pcos_risk || (analysisData.pcos_risk_class === 1 ? "High" : "Low")}
+                      </h3>
+                      <p style={{
+                        fontSize: "14px",
+                        color: "var(--text-muted)",
+                        margin: 0
+                      }}>
+                        Confidence: {analysisData.result?.confidence || analysisData.confidence}%
+                      </p>
+                    </div>
+
+                    {/* Divider */}
+                    <div style={{
+                      height: "1px",
+                      background: "var(--border-light)",
+                      margin: "20px 0"
+                    }} />
+
+                    {/* Recommendation */}
+                    {analysisData.result?.recommendation && (
+                      <div style={{ marginTop: "16px" }}>
+                        <p style={{ 
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "var(--text-muted)",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                          margin: "0 0 8px 0"
+                        }}>
+                          Recommendation
                         </p>
-                        <p style={{ margin: "4px 0" }}>
-                          Confidence: <span style={{ fontWeight: 600 }}>{analysisData.confidence}%</span>
-                        </p>
-                        <p style={{ margin: "4px 0", color: "var(--text-muted)", fontSize: "12px" }}>
-                          Model: {analysisData.model}
+                        <p style={{
+                          fontSize: "14px",
+                          color: "var(--text-dark)",
+                          margin: 0,
+                          lineHeight: 1.5,
+                          fontStyle: "italic",
+                          paddingLeft: "12px",
+                          borderLeft: "3px solid var(--primary)"
+                        }}>
+                          "{analysisData.result.recommendation}"
                         </p>
                       </div>
                     )}
                   </div>
-                </div>
+                )}
               </div>
             )}
           </div>
