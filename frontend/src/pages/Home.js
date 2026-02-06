@@ -1,277 +1,463 @@
-import {
-    Activity,
-    AlertCircle,
-    ArrowRight,
-    Brain,
-    Calendar,
-    CheckCircle2,
-    Heart,
-    Shield,
-    Sparkles,
-    Stethoscope,
-    TrendingUp,
-    Users
-} from "lucide-react";
+import { ArrowRight, Heart, Shield, Zap, Users, Lock, CheckCircle, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
-const symptoms = [
-  { icon: Calendar, text: "Irregular or missed periods" },
-  { icon: Activity, text: "Unexplained weight changes" },
-  { icon: AlertCircle, text: "Acne and oily skin" },
-  { icon: TrendingUp, text: "Excess facial or body hair" },
-  { icon: Heart, text: "Difficulty conceiving" },
-  { icon: Brain, text: "Mood changes and fatigue" },
-];
-
-const stats = [
-  { value: "1 in 10", label: "Women affected globally" },
-  { value: "70%", label: "Cases go undiagnosed" },
-  { value: "50%", label: "Experience insulin resistance" },
-];
-
-const features = [
-  {
-    icon: Stethoscope,
-    title: "AI-Powered Analysis",
-    description: "Our intelligent system analyzes your symptoms using advanced machine learning algorithms.",
-  },
-  {
-    icon: Shield,
-    title: "Private & Secure",
-    description: "Your health data is encrypted and never shared. Your privacy is our priority.",
-  },
-  {
-    icon: Brain,
-    title: "Explainable Results",
-    description: "Get clear, understandable insights about your risk factors and next steps.",
-  },
-];
-
-function Home() {
+export default function Home() {
   const navigate = useNavigate();
+  const [hoveredCard, setHoveredCard] = useState(null);
 
   return (
-    <div className="gradient-hero" style={{ minHeight: "100vh" }}>
+    <div style={{ background: "#0f0f1e", color: "#fff", minHeight: "100vh", overflow: "hidden" }}>
+      {/* Navigation */}
+      <nav style={{
+        padding: "24px 0",
+        background: "rgba(15, 15, 30, 0.95)",
+        backdropFilter: "blur(30px)",
+        borderBottom: "1px solid rgba(232, 93, 138, 0.1)",
+        position: "sticky",
+        top: 0,
+        zIndex: 1000
+      }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "28px", fontWeight: 800 }}>
+            <Heart style={{ width: 36, height: 36, color: "#e85d8a" }} />
+            <span style={{ background: "linear-gradient(135deg, #e85d8a, #f4a8c1)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              PCOSight
+            </span>
+          </div>
+          <button
+            onClick={() => navigate("/diagnose")}
+            style={{
+              padding: "14px 32px",
+              background: "linear-gradient(135deg, #e85d8a, #f4a8c1)",
+              border: "none",
+              borderRadius: "12px",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "15px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              transition: "all 0.3s ease",
+              boxShadow: "0 8px 24px rgba(232, 93, 138, 0.3)"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = "translateY(-4px)";
+              e.target.style.boxShadow = "0 12px 32px rgba(232, 93, 138, 0.5)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = "translateY(0)";
+              e.target.style.boxShadow = "0 8px 24px rgba(232, 93, 138, 0.3)";
+            }}
+          >
+            Start Now <ArrowRight size={18} />
+          </button>
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <section style={{ padding: "48px 0 80px", overflow: "hidden" }}>
-        <div className="container">
-          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "48px", alignItems: "center" }}>
-            <div className="animate-fade-up">
-              <span className="badge badge-primary" style={{ marginBottom: "24px" }}>
-                <Sparkles style={{ width: 16, height: 16 }} />
-                AI-Powered Health Insights
-              </span>
-              <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)", fontWeight: 700, marginBottom: "24px" }}>
-                Take Control of Your{" "}
-                <span className="text-gradient">Reproductive Health</span>
-              </h1>
-              <p className="text-muted" style={{ fontSize: "18px", marginBottom: "32px", maxWidth: "500px" }}>
-                PCOSight uses artificial intelligence to help you understand your symptoms 
-                and take proactive steps toward early PCOS detection.
-              </p>
-              <div className="flex gap-4" style={{ flexWrap: "wrap" }}>
-                <button 
-                  className="btn btn-primary btn-lg"
-                  onClick={() => navigate("/diagnose")}
-                >
-                  Start Free Assessment
-                  <ArrowRight style={{ width: 20, height: 20 }} />
-                </button>
-                <button className="btn btn-outline btn-lg">
-                  Learn More
-                </button>
-              </div>
-            </div>
-            <div className="animate-fade-up" style={{ position: "relative", animationDelay: "0.3s" }}>
-              <div style={{ 
-                position: "relative", 
-                borderRadius: "24px", 
-                overflow: "hidden",
-                background: "linear-gradient(135deg, rgba(212, 99, 138, 0.1) 0%, rgba(90, 154, 168, 0.1) 100%)",
-                height: "400px",
+      <section style={{
+        padding: "120px 40px 80px",
+        textAlign: "center",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        {/* Animated Background */}
+        <div style={{
+          position: "absolute",
+          top: "-50%",
+          left: "-50%",
+          width: "200%",
+          height: "200%",
+          background: "radial-gradient(circle at 20% 50%, rgba(232, 93, 138, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(77, 155, 169, 0.15) 0%, transparent 50%)",
+          animation: "float 20s ease-in-out infinite",
+          zIndex: 0
+        }} />
+
+        <div style={{ maxWidth: "1000px", margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <div style={{
+            display: "inline-block",
+            padding: "12px 24px",
+            background: "rgba(232, 93, 138, 0.1)",
+            border: "1px solid rgba(232, 93, 138, 0.3)",
+            borderRadius: "50px",
+            marginBottom: "32px",
+            fontSize: "14px",
+            fontWeight: 600,
+            animation: "slideInDown 0.8s ease-out"
+          }}>
+            ✨ Intelligent PCOS Detection
+          </div>
+
+          <h1 style={{
+            fontSize: "72px",
+            fontWeight: 900,
+            lineHeight: 1.2,
+            marginBottom: "24px",
+            background: "linear-gradient(135deg, #e85d8a 0%, #f4a8c1 50%, #4d9ba9 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            animation: "slideInUp 0.8s ease-out 0.1s both"
+          }}>
+            Take Control of Your Health
+          </h1>
+
+          <p style={{
+            fontSize: "22px",
+            color: "#b0b0c8",
+            maxWidth: "700px",
+            margin: "0 auto 40px",
+            lineHeight: 1.7,
+            animation: "slideInUp 0.8s ease-out 0.2s both"
+          }}>
+            AI-powered symptom analysis, multi-stage screening, and personalized insights. Understand your PCOS risk in minutes.
+          </p>
+
+          <div style={{
+            display: "flex",
+            gap: "20px",
+            justifyContent: "center",
+            flexWrap: "wrap",
+            animation: "slideInUp 0.8s ease-out 0.3s both"
+          }}>
+            <button
+              onClick={() => navigate("/diagnose")}
+              style={{
+                padding: "18px 44px",
+                background: "linear-gradient(135deg, #e85d8a, #f4a8c1)",
+                border: "none",
+                borderRadius: "12px",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: "16px",
+                cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center"
-              }}>
-                <Heart style={{ width: 120, height: 120, color: "var(--primary-light)", opacity: 0.5 }} />
-              </div>
-              <div className="floating-card animate-float">
-                <div className="flex items-center gap-3">
-                  <div className="icon-box icon-box-accent">
-                    <Users style={{ width: 24, height: 24 }} />
-                  </div>
-                  <div>
-                    <p style={{ fontWeight: 600, color: "var(--text-dark)" }}>10,000+</p>
-                    <p className="text-muted" style={{ fontSize: "14px" }}>Women helped</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+                gap: "10px",
+                transition: "all 0.3s ease",
+                boxShadow: "0 12px 32px rgba(232, 93, 138, 0.4)"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-6px)";
+                e.target.style.boxShadow = "0 16px 48px rgba(232, 93, 138, 0.6)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 12px 32px rgba(232, 93, 138, 0.4)";
+              }}
+            >
+              Get Free Assessment <ArrowRight size={20} />
+            </button>
+
+            <button
+              style={{
+                padding: "18px 44px",
+                background: "transparent",
+                border: "2px solid rgba(232, 93, 138, 0.5)",
+                borderRadius: "12px",
+                color: "#e85d8a",
+                fontWeight: 700,
+                fontSize: "16px",
+                cursor: "pointer",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = "rgba(232, 93, 138, 0.1)";
+                e.target.style.borderColor = "#e85d8a";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "transparent";
+                e.target.style.borderColor = "rgba(232, 93, 138, 0.5)";
+              }}
+            >
+              Learn More
+            </button>
           </div>
+        </div>
+
+        {/* Hero Illustration */}
+        <div style={{
+          marginTop: "80px",
+          position: "relative",
+          height: "400px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          animation: "float 3s ease-in-out infinite"
+        }}>
+          <div style={{
+            width: "300px",
+            height: "300px",
+            background: "linear-gradient(135deg, rgba(232, 93, 138, 0.2), rgba(77, 155, 169, 0.2))",
+            borderRadius: "50%",
+            filter: "blur(40px)"
+          }} />
+          <Heart style={{
+            position: "absolute",
+            width: 150,
+            height: 150,
+            color: "#e85d8a",
+            opacity: 0.4,
+            animation: "pulse 2s ease-in-out infinite"
+          }} />
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="section-alt" style={{ padding: "64px 0" }}>
-        <div className="container">
-          <div className="grid grid-cols-3" style={{ gap: "32px" }}>
-            {stats.map((stat, index) => (
-              <div 
-                key={index}
-                className="text-center animate-fade-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <p style={{ 
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: "clamp(2rem, 4vw, 3rem)", 
-                  fontWeight: 700, 
-                  color: "var(--primary)",
-                  marginBottom: "8px"
-                }}>
-                  {stat.value}
-                </p>
-                <p className="text-muted">{stat.label}</p>
-              </div>
-            ))}
+      <section style={{
+        padding: "80px 40px",
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+        gap: "40px",
+        maxWidth: "1200px",
+        margin: "0 auto"
+      }}>
+        {[
+          { number: "1M+", label: "Women Worldwide" },
+          { number: "70%", label: "Undiagnosed Cases" },
+          { number: "50%", label: "Insulin Resistant" }
+        ].map((stat, idx) => (
+          <div
+            key={idx}
+            style={{
+              padding: "40px",
+              background: "linear-gradient(135deg, rgba(232, 93, 138, 0.08), rgba(77, 155, 169, 0.08))",
+              border: "1px solid rgba(232, 93, 138, 0.2)",
+              borderRadius: "16px",
+              textAlign: "center",
+              transition: "all 0.4s ease",
+              cursor: "pointer",
+              animation: `slideInUp 0.6s ease-out ${idx * 0.1}s both`
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-12px)";
+              e.currentTarget.style.background = "linear-gradient(135deg, rgba(232, 93, 138, 0.15), rgba(77, 155, 169, 0.15))";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.background = "linear-gradient(135deg, rgba(232, 93, 138, 0.08), rgba(77, 155, 169, 0.08))";
+            }}
+          >
+            <div style={{ fontSize: "48px", fontWeight: 900, background: "linear-gradient(135deg, #e85d8a, #f4a8c1)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginBottom: "12px" }}>
+              {stat.number}
+            </div>
+            <div style={{ color: "#b0b0c8" }}>{stat.label}</div>
           </div>
-        </div>
+        ))}
       </section>
 
-      {/* What is PCOS Section */}
-      <section className="section">
-        <div className="container">
-          <div className="text-center" style={{ maxWidth: "700px", margin: "0 auto 64px" }}>
-            <h2 style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)", fontWeight: 700, marginBottom: "16px" }}>
-              Understanding PCOS
+      {/* Features Section */}
+      <section style={{
+        padding: "100px 40px",
+        background: "linear-gradient(180deg, rgba(232, 93, 138, 0.05) 0%, transparent 100%)"
+      }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "80px" }}>
+            <h2 style={{ fontSize: "48px", fontWeight: 900, marginBottom: "16px" }}>
+              Why PCOSight?
             </h2>
-            <p className="text-muted" style={{ fontSize: "18px" }}>
-              Polycystic Ovary Syndrome is a hormonal condition affecting women of reproductive age. 
-              Understanding its symptoms is the first step toward better health.
+            <p style={{ fontSize: "20px", color: "#b0b0c8" }}>
+              Complete PCOS diagnosis in three intelligent steps
             </p>
           </div>
 
-          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
-            {symptoms.map((symptom, index) => (
-              <div 
-                key={index}
-                className="card animate-fade-up"
-                style={{ 
-                  padding: "24px",
-                  animationDelay: `${index * 0.1}s`,
-                  transition: "all 0.3s ease"
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
-                onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="icon-box icon-box-primary">
-                    <symptom.icon style={{ width: 24, height: 24 }} />
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: "32px"
+          }}>
+            {[
+              {
+                icon: Zap,
+                title: "AI Analysis",
+                desc: "Machine learning evaluates your symptoms instantly"
+              },
+              {
+                icon: Shield,
+                title: "Secure & Private",
+                desc: "Bank-level encryption protects your health data"
+              },
+              {
+                icon: CheckCircle,
+                title: "Multi-Stage",
+                desc: "Comprehensive screening with ultrasound & lab reports"
+              }
+            ].map((feature, idx) => {
+              const IconComp = feature.icon;
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    padding: "40px",
+                    background: "linear-gradient(135deg, rgba(30, 30, 50, 0.8), rgba(30, 30, 50, 0.5))",
+                    border: "1px solid rgba(232, 93, 138, 0.2)",
+                    borderRadius: "16px",
+                    transition: "all 0.4s ease",
+                    cursor: "pointer",
+                    animation: `slideInUp 0.6s ease-out ${idx * 0.15}s both`,
+                    position: "relative",
+                    overflow: "hidden"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-12px)";
+                    e.currentTarget.style.background = "linear-gradient(135deg, rgba(232, 93, 138, 0.1), rgba(77, 155, 169, 0.1))";
+                    e.currentTarget.style.borderColor = "rgba(232, 93, 138, 0.5)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.background = "linear-gradient(135deg, rgba(30, 30, 50, 0.8), rgba(30, 30, 50, 0.5))";
+                    e.currentTarget.style.borderColor = "rgba(232, 93, 138, 0.2)";
+                  }}
+                >
+                  <div style={{
+                    width: "60px",
+                    height: "60px",
+                    background: "linear-gradient(135deg, #e85d8a, #f4a8c1)",
+                    borderRadius: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: "20px"
+                  }}>
+                    <IconComp size={32} color="#fff" />
                   </div>
-                  <p style={{ fontWeight: 500 }}>{symptom.text}</p>
+                  <h3 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "12px" }}>
+                    {feature.title}
+                  </h3>
+                  <p style={{ color: "#b0b0c8", lineHeight: 1.6 }}>
+                    {feature.desc}
+                  </p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Why Early Detection Section */}
-      <section className="section section-secondary">
-        <div className="container">
-          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "48px", alignItems: "center" }}>
-            <div>
-              <h2 style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)", fontWeight: 700, marginBottom: "24px" }}>
-                Why Early Detection Matters
-              </h2>
-              <p className="text-muted" style={{ marginBottom: "24px" }}>
-                Early diagnosis of PCOS can help prevent serious long-term health complications 
-                and improve quality of life significantly.
-              </p>
-              <div className="flex flex-col gap-4">
-                {[
-                  "Reduces risk of Type 2 diabetes",
-                  "Prevents cardiovascular complications",
-                  "Improves fertility outcomes",
-                  "Better mental health management",
-                  "Enables lifestyle interventions",
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <CheckCircle2 style={{ width: 20, height: 20, color: "var(--accent)", flexShrink: 0 }} />
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
+      {/* Symptoms Grid */}
+      <section style={{ padding: "100px 40px", maxWidth: "1200px", margin: "0 auto" }}>
+        <h2 style={{ fontSize: "48px", fontWeight: 900, textAlign: "center", marginBottom: "60px" }}>
+          Common PCOS Symptoms
+        </h2>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: "24px"
+        }}>
+          {[
+            "Irregular Periods", "Weight Gain", "Acne", "Hair Growth",
+            "Infertility", "Fatigue", "Dark Patches", "Mood Changes"
+          ].map((symptom, idx) => (
+            <div
+              key={idx}
+              style={{
+                padding: "28px 24px",
+                background: "linear-gradient(135deg, rgba(77, 155, 169, 0.1), rgba(232, 93, 138, 0.1))",
+                border: "1px solid rgba(232, 93, 138, 0.2)",
+                borderRadius: "12px",
+                textAlign: "center",
+                fontWeight: 600,
+                transition: "all 0.3s ease",
+                cursor: "pointer",
+                animation: `slideInUp 0.4s ease-out ${idx * 0.05}s both`
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "linear-gradient(135deg, rgba(232, 93, 138, 0.2), rgba(77, 155, 169, 0.2))";
+                e.currentTarget.style.transform = "translateY(-4px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "linear-gradient(135deg, rgba(77, 155, 169, 0.1), rgba(232, 93, 138, 0.1))";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
+              {symptom}
             </div>
-            <div className="flex flex-col gap-6">
-              {features.map((feature, index) => (
-                <div 
-                  key={index}
-                  className="card"
-                  style={{ padding: "24px", transition: "all 0.3s ease" }}
-                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = "var(--shadow-elevated)"}
-                  onMouseLeave={(e) => e.currentTarget.style.boxShadow = "var(--shadow-card)"}
-                >
-                  <div className="flex gap-4" style={{ alignItems: "flex-start" }}>
-                    <div className="icon-box icon-box-accent">
-                      <feature.icon style={{ width: 24, height: 24 }} />
-                    </div>
-                    <div>
-                      <h3 style={{ fontWeight: 600, marginBottom: "8px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                        {feature.title}
-                      </h3>
-                      <p className="text-muted" style={{ fontSize: "14px" }}>{feature.description}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="section">
-        <div className="container">
-          <div 
-            className="card text-center" 
-            style={{ padding: "64px 48px" }}
+      <section style={{
+        padding: "120px 40px",
+        textAlign: "center",
+        background: "linear-gradient(135deg, #e85d8a 0%, #4d9ba9 100%)",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)",
+          pointerEvents: "none"
+        }} />
+
+        <div style={{ position: "relative", zIndex: 1, maxWidth: "800px", margin: "0 auto" }}>
+          <h2 style={{ fontSize: "48px", fontWeight: 900, marginBottom: "24px" }}>
+            Start Your Assessment Now
+          </h2>
+          <p style={{ fontSize: "20px", marginBottom: "40px", opacity: 0.95 }}>
+            Join thousands of women taking control of their reproductive health today.
+          </p>
+          <button
+            onClick={() => navigate("/diagnose")}
+            style={{
+              padding: "18px 48px",
+              background: "#fff",
+              border: "none",
+              borderRadius: "12px",
+              color: "#e85d8a",
+              fontWeight: 800,
+              fontSize: "17px",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 12px 32px rgba(0, 0, 0, 0.3)"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = "translateY(-4px)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = "translateY(0)";
+            }}
           >
-            <h2 style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)", fontWeight: 700, marginBottom: "16px" }}>
-              Ready to Take the First Step?
-            </h2>
-            <p className="text-muted" style={{ maxWidth: "600px", margin: "0 auto 32px" }}>
-              Our AI-powered assessment takes just a few minutes and provides personalized 
-              insights about your health. Start your journey to better understanding today.
-            </p>
-            <button 
-              className="btn btn-primary btn-lg"
-              onClick={() => navigate("/diagnose")}
-            >
-              Start Free Assessment
-              <ArrowRight style={{ width: 20, height: 20 }} />
-            </button>
-          </div>
+            Get Started Today
+          </button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="footer">
-        <div className="container">
-          <div className="flex justify-between items-center" style={{ flexWrap: "wrap", gap: "16px" }}>
-            <div className="flex items-center gap-2">
-              <Heart style={{ width: 24, height: 24, color: "var(--primary)" }} />
-              <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: "20px" }}>
-                PCOSight
-              </span>
-            </div>
-            <p className="text-muted" style={{ fontSize: "14px" }}>
-              © 2026 PCOSight. For educational purposes. Consult a healthcare provider for medical advice.
-            </p>
-          </div>
-        </div>
+      <footer style={{
+        padding: "40px",
+        textAlign: "center",
+        borderTop: "1px solid rgba(232, 93, 138, 0.1)",
+        color: "#7a7a8e",
+        fontSize: "14px"
+      }}>
+        © 2026 PCOSight | AI-Powered PCOS Diagnosis | Not a medical diagnosis
       </footer>
+
+      <style>{`
+        @keyframes slideInDown {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.8; }
+        }
+      `}</style>
     </div>
   );
 }
-
-export default Home;

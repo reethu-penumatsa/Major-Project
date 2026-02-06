@@ -1,51 +1,66 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Primary - Soft Rose */
-  --primary: #d4638a;
-  --primary-light: #e8a0b8;
-  --primary-dark: #b84d73;
+  /* Primary - Vibrant Pink/Rose */
+  --primary: #e85d8a;
+  --primary-light: #f4a8c1;
+  --primary-dark: #d13f6f;
   
-  /* Accent - Soft Teal */
-  --accent: #5a9aa8;
+  /* Accent - Teal */
+  --accent: #4d9ba9;
   --accent-light: #7fb8c4;
-  --accent-dark: #4a8290;
+  --accent-dark: #356b77;
+  
+  /* Success - Green */
+  --success: #10b981;
+  --success-light: #6ee7b7;
+  
+  /* Warning - Orange */
+  --warning: #f59e0b;
+  
+  /* Danger - Red */
+  --danger: #ef4444;
   
   /* Neutrals */
-  --text-dark: #2d3748;
+  --text-dark: #1f2937;
   --text-muted: #6b7280;
   --text-light: #9ca3af;
   
   /* Backgrounds */
-  --bg-light: #faf8f9;
+  --bg-light: #f9f7fc;
   --bg-white: #ffffff;
-  --bg-soft: #f5f0f2;
-  --bg-card: #ffffff;
+  --bg-soft: #f3f0f8;
+  --bg-dark: #1a1a2e;
   
   /* Gradients */
-  --gradient-hero: linear-gradient(135deg, #fdf2f6 0%, #f0f7f9 50%, #fef7f9 100%);
-  --gradient-primary: linear-gradient(135deg, #d4638a 0%, #e8a0b8 100%);
-  --gradient-accent: linear-gradient(135deg, #5a9aa8 0%, #7fb8c4 100%);
-  --gradient-card: linear-gradient(180deg, #ffffff 0%, #fdfbfc 100%);
+  --gradient-hero: linear-gradient(135deg, #fff5f9 0%, #f0fafe 50%, #fffafb 100%);
+  --gradient-primary: linear-gradient(135deg, #e85d8a 0%, #f4a8c1 100%);
+  --gradient-accent: linear-gradient(135deg, #4d9ba9 0%, #7fb8c4 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #6ee7b7 100%);
+  --gradient-card: linear-gradient(180deg, #ffffff 0%, #fdfbfd 100%);
+  --gradient-dark: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
   
   /* Shadows */
-  --shadow-card: 0 4px 20px rgba(212, 99, 138, 0.08);
-  --shadow-elevated: 0 8px 30px rgba(212, 99, 138, 0.15);
-  --shadow-button: 0 4px 15px rgba(212, 99, 138, 0.25);
+  --shadow-sm: 0 2px 8px rgba(232, 93, 138, 0.08);
+  --shadow-card: 0 8px 24px rgba(232, 93, 138, 0.12);
+  --shadow-elevated: 0 12px 40px rgba(232, 93, 138, 0.18);
+  --shadow-button: 0 4px 15px rgba(232, 93, 138, 0.3);
   
   /* Border */
-  --border-light: #f0e8ec;
-  --border-soft: #e8e0e4;
+  --border-light: #eae5f0;
+  --border-soft: #e0d9e8;
   
   /* Radius */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+  --radius-2xl: 32px;
   
   /* Transitions */
-  --transition-fast: 0.2s ease;
+  --transition-fast: 0.15s ease;
   --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -54,12 +69,38 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--text-dark);
   background: var(--bg-light);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+}
+
+h1 {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 2.5rem;
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: 1.75rem;
+  line-height: 1.3;
 }
 
 /* Utility Classes */
@@ -76,6 +117,57 @@ body {
 
 .text-muted {
   color: var(--text-muted);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Global Button Styles */
+button {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: var(--transition-smooth);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-button);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Link Styles */
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition-smooth);
+}
+
+a:hover {
+  color: var(--primary);
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-light);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
 }
 
 /* Container */

@@ -1,16 +1,14 @@
-import { AlertCircle, ArrowLeft, FileText, Heart, Shield, Sparkles, Upload, Loader } from "lucide-react";
+import { AlertCircle, ArrowLeft, FileText, Heart, Sparkles, Upload, Loader, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Diagnose() {
   const navigate = useNavigate();
-
   const [symptoms, setSymptoms] = useState("");
   const [resultSections, setResultSections] = useState([]);
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-
   const [image, setImage] = useState("");
   const [uploadMsg, setUploadMsg] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -28,9 +26,7 @@ function Diagnose() {
         body: JSON.stringify({ symptoms }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -42,36 +38,28 @@ function Diagnose() {
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
-        
-        // Keep the last incomplete line in the buffer
         buffer = lines[lines.length - 1];
 
         for (let i = 0; i < lines.length - 1; i++) {
           const line = lines[i];
           if (line.startsWith("data: ")) {
             const data = line.substring(6);
-
-            // Check if it's JSON
             if (data.startsWith("{")) {
               try {
                 const chunk = JSON.parse(data);
-                
                 if (chunk.type === "section_header") {
-                  // Add section header
                   setResultSections(prev => [...prev, {
                     id: Date.now() + Math.random(),
                     type: "header",
                     content: chunk.content
                   }]);
                 } else if (chunk.type === "text") {
-                  // Add text content
                   setResultSections(prev => [...prev, {
                     id: Date.now() + Math.random(),
                     type: "text",
                     content: chunk.content
                   }]);
                 } else if (chunk.type === "final_result") {
-                  // Final result
                   setAnalysisData(chunk.data);
                   setIsStreaming(false);
                 }
@@ -104,8 +92,6 @@ function Diagnose() {
     setUploading(true);
     const formData = new FormData();
     formData.append("image", image);
-    
-    // Add analysis data to the request
     if (analysisData) {
       formData.append("pcos_risk_class", analysisData.pcos_risk_class);
       formData.append("confidence", analysisData.confidence);
@@ -116,531 +102,400 @@ function Diagnose() {
         method: "POST",
         body: formData,
       });
-
       const uploadData = await response.json();
       setUploadMsg(uploadData.message);
     } catch (error) {
       setUploadMsg("Error uploading image. Please try again.");
       console.error("Error:", error);
     }
-
     setUploading(false);
   };
 
   return (
-    <div style={{ 
-      minHeight: "100vh",
-      background: "var(--gradient-hero)",
-      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif"
-    }}>
+    <div style={{ background: "#0f0f1e", color: "#fff", minHeight: "100vh" }}>
       {/* Header */}
-      <header style={{ 
-        padding: "20px 0",
-        borderBottom: "1px solid var(--border-light)",
-        background: "rgba(255, 255, 255, 0.8)",
-        backdropFilter: "blur(10px)"
+      <header style={{
+        padding: "24px 0",
+        background: "rgba(15, 15, 30, 0.95)",
+        backdropFilter: "blur(30px)",
+        borderBottom: "1px solid rgba(232, 93, 138, 0.1)",
+        position: "sticky",
+        top: 0,
+        zIndex: 100
       }}>
-        <div className="container">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <button 
-              onClick={() => navigate("/")}
-              style={{ 
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "10px 20px",
-                background: "var(--bg-white)",
-                border: "1px solid var(--border-soft)",
-                borderRadius: "var(--radius-md)",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: 500,
-                color: "var(--text-dark)",
-                transition: "var(--transition-smooth)"
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "var(--primary)";
-                e.currentTarget.style.color = "var(--primary)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "var(--border-soft)";
-                e.currentTarget.style.color = "var(--text-dark)";
-              }}
-            >
-              <ArrowLeft style={{ width: 18, height: 18 }} />
-              Back to Home
-            </button>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Heart style={{ width: 24, height: 24, color: "var(--primary)" }} />
-              <span style={{ 
-                fontFamily: "'Playfair Display', serif", 
-                fontWeight: 700, 
-                fontSize: "20px",
-                color: "var(--text-dark)"
-              }}>
-                PCOSight
-              </span>
-            </div>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <button
+            onClick={() => navigate("/")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "10px 16px",
+              background: "rgba(232, 93, 138, 0.1)",
+              border: "1px solid rgba(232, 93, 138, 0.2)",
+              borderRadius: "8px",
+              color: "#e85d8a",
+              cursor: "pointer",
+              fontWeight: 600,
+              transition: "all 0.3s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(232, 93, 138, 0.2)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(232, 93, 138, 0.1)";
+            }}
+          >
+            <ArrowLeft size={18} /> Back Home
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <Heart size={28} color="#e85d8a" />
+            <span style={{ fontSize: "20px", fontWeight: 800 }}>PCOSight</span>
           </div>
+          <div style={{ width: "120px" }} />
         </div>
       </header>
 
       {/* Main Content */}
-      <main style={{ padding: "48px 0 80px" }}>
-        <div className="container" style={{ maxWidth: "800px" }}>
-          {/* Page Title */}
-          <div style={{ textAlign: "center", marginBottom: "48px" }}>
-            <div style={{ 
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "8px 16px",
-              background: "rgba(212, 99, 138, 0.1)",
-              borderRadius: "100px",
-              marginBottom: "16px",
-              color: "var(--primary)",
-              fontSize: "14px",
-              fontWeight: 500
-            }}>
-              <Sparkles style={{ width: 16, height: 16 }} />
-              AI-Powered Assessment
-            </div>
-            <h1 style={{ 
-              fontFamily: "'Playfair Display', serif",
-              fontSize: "clamp(2rem, 4vw, 2.75rem)",
-              fontWeight: 700,
-              color: "var(--text-dark)",
-              marginBottom: "12px"
-            }}>
-              PCOS Diagnosis
-            </h1>
-            <p style={{ 
-              color: "var(--text-muted)",
-              fontSize: "18px",
-              maxWidth: "500px",
-              margin: "0 auto"
-            }}>
-              Get personalized insights about your symptoms using our intelligent analysis system.
-            </p>
-          </div>
-
-          {/* Symptom Checker Card */}
-          <div style={{ 
-            background: "var(--gradient-card)",
-            borderRadius: "var(--radius-xl)",
-            boxShadow: "var(--shadow-card)",
-            border: "1px solid var(--border-light)",
-            padding: "32px",
+      <main style={{ padding: "60px 40px", maxWidth: "1000px", margin: "0 auto" }}>
+        {/* Page Header */}
+        <div style={{ textAlign: "center", marginBottom: "60px", animation: "slideInUp 0.6s ease-out" }}>
+          <div style={{
+            display: "inline-block",
+            padding: "12px 24px",
+            background: "rgba(232, 93, 138, 0.1)",
+            border: "1px solid rgba(232, 93, 138, 0.3)",
+            borderRadius: "50px",
             marginBottom: "24px",
-            transition: "var(--transition-smooth)"
+            fontSize: "14px",
+            fontWeight: 600
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
-              <div style={{ 
-                width: "48px",
-                height: "48px",
-                borderRadius: "var(--radius-md)",
-                background: "rgba(212, 99, 138, 0.1)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}>
-                <FileText style={{ width: 24, height: 24, color: "var(--primary)" }} />
-              </div>
-              <div>
-                <h2 style={{ 
-                  fontWeight: 600,
-                  fontSize: "18px",
-                  color: "var(--text-dark)",
-                  marginBottom: "4px"
-                }}>
-                  Symptom Checker
-                </h2>
-                <p style={{ fontSize: "14px", color: "var(--text-muted)" }}>
-                  Describe your symptoms for AI analysis
-                </p>
-              </div>
+            📋 Step 1: Symptom Analysis
+          </div>
+          <h1 style={{
+            fontSize: "56px",
+            fontWeight: 900,
+            marginBottom: "16px",
+            background: "linear-gradient(135deg, #e85d8a, #f4a8c1)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent"
+          }}>
+            Tell Us About Your Symptoms
+          </h1>
+          <p style={{ fontSize: "18px", color: "#b0b0c8", maxWidth: "700px", margin: "0 auto" }}>
+            Describe your symptoms in detail. Our AI will analyze and provide personalized insights.
+          </p>
+        </div>
+
+        {/* Input Card */}
+        <div style={{
+          background: "linear-gradient(135deg, rgba(232, 93, 138, 0.08), rgba(77, 155, 169, 0.08))",
+          border: "2px solid rgba(232, 93, 138, 0.2)",
+          borderRadius: "20px",
+          padding: "48px",
+          marginBottom: "40px",
+          animation: "slideInUp 0.7s ease-out 0.1s both"
+        }}>
+          <label style={{ fontSize: "18px", fontWeight: 700, marginBottom: "20px", display: "block" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+              <FileText size={24} color="#e85d8a" />
+              Describe Your Symptoms
             </div>
+          </label>
 
-            <textarea
-              rows={5}
-              placeholder="Describe your symptoms in detail (e.g., irregular periods, unexplained weight gain, acne, excessive hair growth, fatigue...)"
-              value={symptoms}
-              onChange={(e) => setSymptoms(e.target.value)}
-              style={{ 
-                width: "100%",
-                padding: "16px",
-                borderRadius: "var(--radius-md)",
-                border: "1px solid var(--border-soft)",
-                fontSize: "15px",
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                resize: "vertical",
-                minHeight: "120px",
-                background: "var(--bg-light)",
-                color: "var(--text-dark)",
-                outline: "none",
-                transition: "var(--transition-smooth)"
-              }}
-              onFocus={(e) => e.currentTarget.style.borderColor = "var(--primary-light)"}
-              onBlur={(e) => e.currentTarget.style.borderColor = "var(--border-soft)"}
-            />
+          <textarea
+            placeholder="E.g., I have irregular periods and acne. Can you tell if I have PCOS?"
+            value={symptoms}
+            onChange={(e) => setSymptoms(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "20px",
+              borderRadius: "12px",
+              border: "2px solid rgba(232, 93, 138, 0.3)",
+              background: "rgba(15, 15, 30, 0.5)",
+              color: "#fff",
+              fontSize: "16px",
+              fontFamily: "inherit",
+              minHeight: "160px",
+              resize: "vertical",
+              outline: "none",
+              transition: "all 0.3s ease",
+              marginBottom: "24px"
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = "#e85d8a";
+              e.target.style.boxShadow = "0 0 0 3px rgba(232, 93, 138, 0.15)";
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = "rgba(232, 93, 138, 0.3)";
+              e.target.style.boxShadow = "none";
+            }}
+          />
 
-            <button 
-              onClick={handleSymptomSubmit} 
-              disabled={!symptoms || loading}
-              style={{ 
-                marginTop: "20px",
-                padding: "14px 28px",
-                background: (!symptoms || loading) ? "var(--text-light)" : "var(--gradient-primary)",
-                color: "#fff",
-                border: "none",
-                borderRadius: "var(--radius-md)",
-                cursor: (!symptoms || loading) ? "not-allowed" : "pointer",
-                fontSize: "15px",
-                fontWeight: 600,
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
+          <button
+            onClick={handleSymptomSubmit}
+            disabled={!symptoms || loading}
+            style={{
+              width: "100%",
+              padding: "18px 40px",
+              background: (!symptoms || loading) ? "rgba(232, 93, 138, 0.3)" : "linear-gradient(135deg, #e85d8a, #f4a8c1)",
+              border: "none",
+              borderRadius: "12px",
+              color: "#fff",
+              fontSize: "16px",
+              fontWeight: 700,
+              cursor: (!symptoms || loading) ? "not-allowed" : "pointer",
+              transition: "all 0.3s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "12px"
+            }}
+            onMouseEnter={(e) => {
+              if (symptoms && !loading) {
+                e.target.style.transform = "translateY(-4px)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = "translateY(0)";
+            }}
+          >
+            <Sparkles size={20} />
+            {loading ? "Analyzing Symptoms..." : "Analyze My Symptoms"}
+          </button>
+        </div>
+
+        {/* Results Section */}
+        {(resultSections.length > 0 || isStreaming) && (
+          <div style={{
+            background: "linear-gradient(135deg, rgba(232, 93, 138, 0.08), rgba(77, 155, 169, 0.08))",
+            border: "2px solid rgba(232, 93, 138, 0.2)",
+            borderRadius: "20px",
+            padding: "40px",
+            animation: "slideInUp 0.6s ease-out"
+          }}>
+            {resultSections.map((section) => (
+              <div key={section.id} style={{ marginBottom: "24px", animation: "slideInUp 0.4s ease-out" }}>
+                {section.type === "header" && (
+                  <div style={{
+                    fontSize: "20px",
+                    fontWeight: 800,
+                    color: "#e85d8a",
+                    marginBottom: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px"
+                  }}>
+                    {section.content}
+                  </div>
+                )}
+                {section.type === "text" && (
+                  <p style={{
+                    fontSize: "16px",
+                    color: "#c0c0d8",
+                    lineHeight: 1.8,
+                    margin: 0,
+                    paddingLeft: "16px",
+                    borderLeft: "4px solid #e85d8a"
+                  }}>
+                    {section.content}
+                  </p>
+                )}
+                {section.type === "error" && (
+                  <div style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "12px",
+                    background: "rgba(239, 68, 68, 0.1)",
+                    padding: "16px",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                    color: "#ff7070"
+                  }}>
+                    <AlertCircle size={20} style={{ flexShrink: 0 }} />
+                    <p style={{ margin: 0 }}>{section.content}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {isStreaming && (
+              <div style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "8px",
-                boxShadow: (!symptoms || loading) ? "none" : "var(--shadow-button)",
-                transition: "var(--transition-smooth)"
-              }}
-            >
-              <Sparkles style={{ width: 18, height: 18 }} />
-              {loading ? "Analyzing Symptoms..." : "Check PCOS Risk"}
-            </button>
+                gap: "12px",
+                color: "#e85d8a",
+                marginTop: "24px"
+              }}>
+                <Loader size={20} style={{ animation: "spin 1s linear infinite" }} />
+                <span style={{ fontWeight: 600 }}>Processing your analysis...</span>
+              </div>
+            )}
 
-            {(resultSections.length > 0 || isStreaming) && (
-              <div style={{ marginTop: "32px" }}>
-                {/* Streaming Sections */}
-                <div style={{
-                  background: "linear-gradient(135deg, rgba(212, 99, 138, 0.05) 0%, rgba(90, 154, 168, 0.05) 100%)",
-                  border: "1px solid var(--border-light)",
-                  borderRadius: "var(--radius-lg)",
-                  padding: "24px",
-                  overflow: "hidden"
-                }}>
-                  {resultSections.map((section, idx) => (
-                    <div
-                      key={section.id}
-                      style={{
-                        marginBottom: idx < resultSections.length - 1 ? "24px" : "0",
-                        animation: "slideIn 0.4s ease-out"
-                      }}
-                    >
-                      {section.type === "header" && (
-                        <div style={{
-                          fontSize: "16px",
-                          fontWeight: 700,
-                          color: "var(--primary)",
-                          marginBottom: "12px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px"
-                        }}>
-                          {section.content}
-                        </div>
-                      )}
-                      {section.type === "text" && (
-                        <p style={{
-                          fontSize: "14px",
-                          lineHeight: 1.7,
-                          color: "var(--text-muted)",
-                          margin: 0,
-                          paddingLeft: "12px",
-                          borderLeft: "3px solid rgba(212, 99, 138, 0.3)"
-                        }}>
-                          {section.content}
-                        </p>
-                      )}
-                      {section.type === "error" && (
-                        <div style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: "10px",
-                          color: "#dc2626"
-                        }}>
-                          <AlertCircle style={{ width: 20, height: 20, flexShrink: 0, marginTop: "2px" }} />
-                          <p style={{ margin: 0, fontSize: "14px" }}>{section.content}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  
-                  {/* Typing Indicator */}
-                  {isStreaming && (
-                    <div style={{
-                      marginTop: "16px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      color: "var(--primary)"
-                    }}>
-                      <Loader style={{ width: 16, height: 16, animation: "spin 1s linear infinite" }} />
-                      <span style={{ fontSize: "13px", fontWeight: 500 }}>Processing your analysis...</span>
-                    </div>
-                  )}
+            {analysisData && (
+              <div style={{
+                marginTop: "32px",
+                padding: "32px",
+                background: "rgba(15, 15, 30, 0.5)",
+                borderRadius: "16px",
+                border: "2px solid rgba(232, 93, 138, 0.3)",
+                animation: "slideInUp 0.6s ease-out"
+              }}>
+                <div style={{ marginBottom: "20px" }}>
+                  <div style={{ fontSize: "13px", color: "#7a7a8e", fontWeight: 700, textTransform: "uppercase", marginBottom: "12px" }}>
+                    Assessment Result
+                  </div>
+                  <div style={{
+                    fontSize: "32px",
+                    fontWeight: 900,
+                    color: analysisData.pcos_risk_class === 1 ? "#ff7070" : "#10b981",
+                    marginBottom: "8px"
+                  }}>
+                    PCOS Risk: {analysisData.result?.pcos_risk || (analysisData.pcos_risk_class === 1 ? "High" : "Low")}
+                  </div>
+                  <div style={{ fontSize: "16px", color: "#b0b0c8" }}>
+                    Confidence: <span style={{ fontWeight: 700, color: "#fff" }}>{analysisData.result?.confidence || analysisData.confidence}%</span>
+                  </div>
                 </div>
 
-                {/* Result Card - Matching Figure Format */}
-                {analysisData && (
-                  <div style={{
-                    marginTop: "24px",
-                    background: "linear-gradient(135deg, rgba(212, 99, 138, 0.05) 0%, rgba(90, 154, 168, 0.05) 100%)",
-                    border: "1px solid var(--border-light)",
-                    borderRadius: "var(--radius-lg)",
-                    padding: "24px",
-                    overflow: "hidden",
-                    animation: "slideIn 0.6s ease-out"
-                  }}>
-                    {/* Result Header */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <p style={{ 
-                        fontSize: "13px",
-                        fontWeight: 500,
-                        color: "var(--text-muted)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                        margin: "0 0 8px 0"
-                      }}>
-                        Assessment Result
-                      </p>
-                      <h3 style={{ 
-                        fontSize: "20px",
-                        fontWeight: 700,
-                        color: analysisData.pcos_risk_class === 1 ? "#dc2626" : "#22c55e",
-                        margin: "0 0 4px 0"
-                      }}>
-                        PCOS Risk: {analysisData.result?.pcos_risk || (analysisData.pcos_risk_class === 1 ? "High" : "Low")}
-                      </h3>
-                      <p style={{
-                        fontSize: "14px",
-                        color: "var(--text-muted)",
-                        margin: 0
-                      }}>
-                        Confidence: {analysisData.result?.confidence || analysisData.confidence}%
-                      </p>
+                <div style={{ height: "2px", background: "linear-gradient(90deg, #e85d8a, transparent)", margin: "20px 0" }} />
+
+                {analysisData.result?.recommendation && (
+                  <div style={{ marginTop: "20px" }}>
+                    <div style={{ fontSize: "13px", color: "#7a7a8e", fontWeight: 700, textTransform: "uppercase", marginBottom: "12px" }}>
+                      Recommendation
                     </div>
-
-                    {/* Divider */}
-                    <div style={{
-                      height: "1px",
-                      background: "var(--border-light)",
-                      margin: "20px 0"
-                    }} />
-
-                    {/* Recommendation */}
-                    {analysisData.result?.recommendation && (
-                      <div style={{ marginTop: "16px" }}>
-                        <p style={{ 
-                          fontSize: "12px",
-                          fontWeight: 600,
-                          color: "var(--text-muted)",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.5px",
-                          margin: "0 0 8px 0"
-                        }}>
-                          Recommendation
-                        </p>
-                        <p style={{
-                          fontSize: "14px",
-                          color: "var(--text-dark)",
-                          margin: 0,
-                          lineHeight: 1.5,
-                          fontStyle: "italic",
-                          paddingLeft: "12px",
-                          borderLeft: "3px solid var(--primary)"
-                        }}>
-                          "{analysisData.result.recommendation}"
-                        </p>
-                      </div>
-                    )}
+                    <p style={{
+                      fontSize: "16px",
+                      color: "#c0c0d8",
+                      lineHeight: 1.8,
+                      margin: 0,
+                      paddingLeft: "16px",
+                      borderLeft: "4px solid #4d9ba9",
+                      fontStyle: "italic"
+                    }}>
+                      {analysisData.result.recommendation}
+                    </p>
                   </div>
                 )}
               </div>
             )}
           </div>
+        )}
 
-          {/* Ultrasound Upload Card */}
-          <div style={{ 
-            background: "var(--gradient-card)",
-            borderRadius: "var(--radius-xl)",
-            boxShadow: "var(--shadow-card)",
-            border: "1px solid var(--border-light)",
-            padding: "32px",
-            marginBottom: "32px"
+        {/* Ultrasound Upload */}
+        {analysisData && (
+          <div style={{
+            marginTop: "40px",
+            background: "linear-gradient(135deg, rgba(77, 155, 169, 0.08), rgba(232, 93, 138, 0.08))",
+            border: "2px solid rgba(77, 155, 169, 0.2)",
+            borderRadius: "20px",
+            padding: "48px",
+            animation: "slideInUp 0.8s ease-out 0.2s both"
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
-              <div style={{ 
-                width: "48px",
-                height: "48px",
-                borderRadius: "var(--radius-md)",
-                background: "rgba(90, 154, 168, 0.1)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}>
-                <Upload style={{ width: 24, height: 24, color: "var(--accent)" }} />
+            <div style={{ marginBottom: "24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                <Upload size={24} color="#4d9ba9" />
+                <h3 style={{ fontSize: "22px", fontWeight: 700, margin: 0 }}>Upload Ultrasound Scan</h3>
               </div>
-              <div>
-                <h2 style={{ 
-                  fontWeight: 600,
-                  fontSize: "18px",
-                  color: "var(--text-dark)",
-                  marginBottom: "4px"
-                }}>
-                  Upload Ultrasound Scan
-                </h2>
-                <p style={{ fontSize: "14px", color: "var(--text-muted)" }}>
-                  Upload your ovarian ultrasound for analysis
-                </p>
-              </div>
+              <p style={{ color: "#b0b0c8", margin: 0 }}>Upload your ovarian ultrasound for multi-stage analysis</p>
             </div>
 
-            <div style={{ 
-              border: "2px dashed var(--border-soft)",
-              borderRadius: "var(--radius-md)",
-              padding: "32px",
+            <div style={{
+              border: "2px dashed rgba(77, 155, 169, 0.3)",
+              borderRadius: "12px",
+              padding: "40px 20px",
               textAlign: "center",
-              background: "var(--bg-light)",
-              transition: "var(--transition-smooth)",
-              marginBottom: "20px"
+              marginBottom: "20px",
+              background: "rgba(77, 155, 169, 0.05)",
+              transition: "all 0.3s ease"
             }}>
               <input
                 type="file"
                 accept="image/*"
-                id="ultrasound-upload"
-                onChange={(e) => setImage(e.target.files?.[0] || null)}
+                onChange={(e) => setImage(e.target.files?.[0] || "")}
                 style={{ display: "none" }}
+                id="imageInput"
               />
-              <label 
-                htmlFor="ultrasound-upload"
-                style={{ 
-                  cursor: "pointer",
+              <label
+                htmlFor="imageInput"
+                style={{
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  gap: "12px"
+                  gap: "12px",
+                  cursor: "pointer"
                 }}
               >
-                <div style={{ 
-                  width: "64px",
-                  height: "64px",
-                  borderRadius: "50%",
-                  background: "rgba(90, 154, 168, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}>
-                  <Upload style={{ width: 28, height: 28, color: "var(--accent)" }} />
-                </div>
+                <Upload size={40} color="#4d9ba9" />
                 <div>
-                  <p style={{ fontWeight: 500, color: "var(--text-dark)", marginBottom: "4px" }}>
-                    {image ? image.name : "Click to upload or drag and drop"}
-                  </p>
-                  <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                    PNG, JPG, or JPEG (max 10MB)
-                  </p>
+                  <div style={{ fontWeight: 700, marginBottom: "4px" }}>Click to upload or drag and drop</div>
+                  <div style={{ color: "#7a7a8e", fontSize: "14px" }}>PNG, JPG, GIF up to 10MB</div>
                 </div>
               </label>
+              {image && (
+                <div style={{ marginTop: "16px", color: "#10b981", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                  <CheckCircle size={20} />
+                  {image.name}
+                </div>
+              )}
             </div>
 
-            <button 
-              onClick={handleImageUpload} 
+            <button
+              onClick={handleImageUpload}
               disabled={!image || uploading}
-              style={{ 
-                padding: "14px 28px",
-                background: (!image || uploading) ? "var(--text-light)" : "var(--gradient-accent)",
-                color: "#fff",
+              style={{
+                width: "100%",
+                padding: "16px 40px",
+                background: (!image || uploading) ? "rgba(77, 155, 169, 0.3)" : "linear-gradient(135deg, #4d9ba9, #7fb8c4)",
                 border: "none",
-                borderRadius: "var(--radius-md)",
+                borderRadius: "12px",
+                color: "#fff",
+                fontSize: "16px",
+                fontWeight: 700,
                 cursor: (!image || uploading) ? "not-allowed" : "pointer",
-                fontSize: "15px",
-                fontWeight: 600,
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                boxShadow: (!image || uploading) ? "none" : "0 4px 15px rgba(90, 154, 168, 0.25)",
-                transition: "var(--transition-smooth)"
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => {
+                if (image && !uploading) {
+                  e.target.style.transform = "translateY(-4px)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
               }}
             >
-              <Upload style={{ width: 18, height: 18 }} />
-              {uploading ? "Uploading..." : "Analyze Ultrasound"}
+              {uploading ? "Uploading..." : "Upload Ultrasound"}
             </button>
 
             {uploadMsg && (
-              <div style={{ 
-                marginTop: "24px",
-                padding: "20px",
-                background: uploadMsg.includes("Error") 
-                  ? "rgba(239, 68, 68, 0.08)" 
-                  : "linear-gradient(135deg, rgba(90, 154, 168, 0.08) 0%, rgba(212, 99, 138, 0.08) 100%)",
-                borderRadius: "var(--radius-md)",
-                border: `1px solid ${uploadMsg.includes("Error") ? "rgba(239, 68, 68, 0.2)" : "var(--border-light)"}`
+              <div style={{
+                marginTop: "16px",
+                padding: "12px",
+                background: uploadMsg.includes("Error") ? "rgba(239, 68, 68, 0.1)" : "rgba(16, 185, 129, 0.1)",
+                border: `1px solid ${uploadMsg.includes("Error") ? "rgba(239, 68, 68, 0.3)" : "rgba(16, 185, 129, 0.3)"}`,
+                borderRadius: "8px",
+                color: uploadMsg.includes("Error") ? "#ff7070" : "#10b981",
+                fontSize: "14px",
+                fontWeight: 600
               }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                  {uploadMsg.includes("Error") ? (
-                    <AlertCircle style={{ width: 20, height: 20, color: "#ef4444", flexShrink: 0, marginTop: "2px" }} />
-                  ) : (
-                    <Shield style={{ width: 20, height: 20, color: "var(--accent)", flexShrink: 0, marginTop: "2px" }} />
-                  )}
-                  <p style={{ 
-                    color: uploadMsg.includes("Error") ? "#dc2626" : "var(--text-muted)",
-                    fontSize: "14px",
-                    lineHeight: 1.6
-                  }}>
-                    {uploadMsg}
-                  </p>
-                </div>
+                {uploadMsg}
               </div>
             )}
           </div>
-
-          {/* Disclaimer */}
-          <div style={{ 
-            padding: "20px 24px",
-            background: "rgba(212, 99, 138, 0.05)",
-            borderRadius: "var(--radius-md)",
-            border: "1px solid var(--border-light)",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "12px"
-          }}>
-            <AlertCircle style={{ width: 20, height: 20, color: "var(--primary)", flexShrink: 0, marginTop: "2px" }} />
-            <p style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6 }}>
-              <strong style={{ color: "var(--text-dark)" }}>Disclaimer:</strong> This tool is for educational and informational purposes only. 
-              It does not replace professional medical advice, diagnosis, or treatment. 
-              Always consult with a qualified healthcare provider for medical concerns.
-            </p>
-          </div>
-        </div>
+        )}
       </main>
 
-      {/* Footer */}
-      <footer style={{ 
-        background: "var(--bg-white)",
-        padding: "24px 0",
-        borderTop: "1px solid var(--border-light)"
-      }}>
-        <div className="container">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Heart style={{ width: 20, height: 20, color: "var(--primary)" }} />
-              <span style={{ 
-                fontFamily: "'Playfair Display', serif", 
-                fontWeight: 700, 
-                fontSize: "18px",
-                color: "var(--text-dark)"
-              }}>
-                PCOSight
-              </span>
-            </div>
-            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-              © 2026 PCOSight. For educational purposes only.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <style>{`
+        @keyframes slideInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
