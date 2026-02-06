@@ -385,31 +385,57 @@ function Diagnose() {
 
         {/* Ultrasound Upload */}
         {analysisData && (
-          <div style={{
-            marginTop: "40px",
-            background: "linear-gradient(135deg, rgba(77, 155, 169, 0.08), rgba(232, 93, 138, 0.08))",
-            border: "2px solid rgba(77, 155, 169, 0.2)",
-            borderRadius: "20px",
-            padding: "48px",
-            animation: "slideInUp 0.8s ease-out 0.2s both"
-          }}>
-            <div style={{ marginBottom: "24px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                <Upload size={24} color="#4d9ba9" />
-                <h3 style={{ fontSize: "22px", fontWeight: 700, margin: 0 }}>Upload Ultrasound Scan</h3>
+          <>
+            {/* Step 2 header — placed outside the rounded upload card and centered to match Step 1 */}
+            <div style={{ textAlign: "center", marginTop: "48px", marginBottom: "40px", animation: "slideInUp 0.6s ease-out" }}>
+              <div style={{
+                display: "inline-block",
+                padding: "12px 24px",
+                background: "rgba(232, 93, 138, 0.1)",
+                border: "1px solid rgba(232, 93, 138, 0.3)",
+                borderRadius: "50px",
+                marginBottom: "16px",
+                fontSize: "14px",
+                fontWeight: 600,
+                color: "#e85d8a"
+              }}>
+                📷 Step 2: Ultrasound Upload
               </div>
-              <p style={{ color: "#b0b0c8", margin: 0 }}>Upload your ovarian ultrasound for multi-stage analysis</p>
+
+              <h2 style={{
+                fontSize: "44px",
+                fontWeight: 900,
+                margin: "12px 0 20px",
+                background: "linear-gradient(135deg, #e85d8a, #f4a8c1)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                display: "block"
+              }}>
+                Upload Ultrasound Scan
+              </h2>
+
+              <p style={{ fontSize: "16px", color: "#b0b0c8", margin: 0 }}>
+                Upload your ovarian ultrasound for multi-stage analysis
+              </p>
             </div>
 
             <div style={{
-              border: "2px dashed rgba(77, 155, 169, 0.3)",
-              borderRadius: "12px",
-              padding: "40px 20px",
-              textAlign: "center",
-              marginBottom: "20px",
-              background: "rgba(77, 155, 169, 0.05)",
-              transition: "all 0.3s ease"
+              marginTop: "32px",
+              background: "linear-gradient(135deg, rgba(77, 155, 169, 0.08), rgba(232, 93, 138, 0.08))",
+              border: "2px solid rgba(77, 155, 169, 0.2)",
+              borderRadius: "20px",
+              padding: "56px",
+              animation: "slideInUp 0.8s ease-out 0.2s both"
             }}>
+              <div style={{
+                border: "2px dashed rgba(77, 155, 169, 0.3)",
+                borderRadius: "12px",
+                padding: "60px 20px",
+                textAlign: "center",
+                marginBottom: "28px",
+                background: "rgba(77, 155, 169, 0.05)",
+                transition: "all 0.3s ease"
+              }}>
               <input
                 type="file"
                 accept="image/*"
@@ -483,6 +509,7 @@ function Diagnose() {
               </div>
             )}
           </div>
+        </>
         )}
       </main>
 
