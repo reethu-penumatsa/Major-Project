@@ -4,9 +4,17 @@ from services.symptom_service import analyze_symptoms_with_bert
 import os
 import json
 from PIL import Image
+from flask import send_from_directory
 
 app = Flask(__name__)
 CORS(app)
+
+from ultrasound_api import ultrasound_bp
+app.register_blueprint(ultrasound_bp)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+HEATMAP_FOLDER = os.path.join(BASE_DIR, "backend", "heatmaps")
 
 # ---------------- BASIC ROUTES ----------------
 
@@ -46,46 +54,11 @@ def symptom_check():
 
     return Response(stream(), mimetype="text/event-stream")
 
-# ------------------------------------------------
-# 🖼️ ULTRASOUND UPLOAD (WITH SYMPTOM DATA)
-# ------------------------------------------------
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-@app.route("/upload-ultrasound", methods=["POST"])
-def upload_ultrasound():
-    if "image" not in request.files:
-        return jsonify({"error": "No image uploaded"}), 400
-
-    image_file = request.files["image"]
-
-    if image_file.filename == "":
-        return jsonify({"error": "Empty filename"}), 400
-
-    # Get PCOS risk data from the request
-    pcos_risk_class = request.form.get("pcos_risk_class", "unknown")
-    confidence = request.form.get("confidence", "unknown")
-
-    # Log the received data for testing
-    print(f"\n{'='*60}")
-    print("📊 UPLOAD ENDPOINT - DATA RECEIVED FROM SYMPTOM SERVICE")
-    print(f"{'='*60}")
-    print(f"📁 Image Filename: {image_file.filename}")
-    print(f"🔴 PCOS Risk Class: {pcos_risk_class}")
-    print(f"📈 Confidence: {confidence}%")
-    print(f"{'='*60}\n")
-
-    save_path = os.path.join(UPLOAD_FOLDER, image_file.filename)
-    image = Image.open(image_file)
-    image.save(save_path)
-
-    return jsonify({
-        "message": "Ultrasound image uploaded successfully",
-        "filename": image_file.filename,
-        "pcos_risk_class": pcos_risk_class,
-        "confidence": confidence,
-        "next_step": "ultrasound_analysis"
-    })
+@app.route("/heatmaps/<filename>")
+def serve_heatmap(filename):
+    #heatmap_folder = os.path.join(BASE_DIR, "backend", "heatmaps")
+    return send_from_directory("C:\\Users\\Reethu Penumatsa\\MajorProject\\Major-Project\\backend\\heatmaps", filename)
 
 # ------------------------------------------------
 # 🔬 ULTRASOUND ANALYSIS (SAMPLE)

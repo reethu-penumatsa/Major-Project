@@ -1,0 +1,8 @@
+*.npy
+*.h5
+ml/ultrasound/data/
+ml/ultrasound/X_train.npy 
+ml/ultrasound/X_test.npy 
+venv/backend/venv 
+node_modules/
+

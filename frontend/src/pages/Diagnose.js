@@ -1,6 +1,7 @@
-import { AlertCircle, ArrowLeft, FileText, Heart, Sparkles, Upload, Loader, CheckCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft, FileText, Heart, Sparkles, Loader } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Ultrasound from "./Ultrasound";
 
 function Diagnose() {
   const navigate = useNavigate();
@@ -9,9 +10,6 @@ function Diagnose() {
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [image, setImage] = useState("");
-  const [uploadMsg, setUploadMsg] = useState("");
-  const [uploading, setUploading] = useState(false);
 
   const handleSymptomSubmit = async () => {
     setLoading(true);
@@ -83,33 +81,7 @@ function Diagnose() {
     setLoading(false);
   };
 
-  const handleImageUpload = async () => {
-    if (!image) {
-      setUploadMsg("Please select an ultrasound image first");
-      return;
-    }
-
-    setUploading(true);
-    const formData = new FormData();
-    formData.append("image", image);
-    if (analysisData) {
-      formData.append("pcos_risk_class", analysisData.pcos_risk_class);
-      formData.append("confidence", analysisData.confidence);
-    }
-
-    try {
-      const response = await fetch("http://127.0.0.1:5000/upload-ultrasound", {
-        method: "POST",
-        body: formData,
-      });
-      const uploadData = await response.json();
-      setUploadMsg(uploadData.message);
-    } catch (error) {
-      setUploadMsg("Error uploading image. Please try again.");
-      console.error("Error:", error);
-    }
-    setUploading(false);
-  };
+  
 
   return (
     <div style={{ background: "#0f0f1e", color: "#fff", minHeight: "100vh" }}>
@@ -383,134 +355,8 @@ function Diagnose() {
           </div>
         )}
 
-        {/* Ultrasound Upload */}
-        {analysisData && (
-          <>
-            {/* Step 2 header — placed outside the rounded upload card and centered to match Step 1 */}
-            <div style={{ textAlign: "center", marginTop: "48px", marginBottom: "40px", animation: "slideInUp 0.6s ease-out" }}>
-              <div style={{
-                display: "inline-block",
-                padding: "12px 24px",
-                background: "rgba(232, 93, 138, 0.1)",
-                border: "1px solid rgba(232, 93, 138, 0.3)",
-                borderRadius: "50px",
-                marginBottom: "16px",
-                fontSize: "14px",
-                fontWeight: 600,
-                color: "#e85d8a"
-              }}>
-                📷 Step 2: Ultrasound Upload
-              </div>
-
-              <h2 style={{
-                fontSize: "44px",
-                fontWeight: 900,
-                margin: "12px 0 20px",
-                background: "linear-gradient(135deg, #e85d8a, #f4a8c1)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                display: "block"
-              }}>
-                Upload Ultrasound Scan
-              </h2>
-
-              <p style={{ fontSize: "16px", color: "#b0b0c8", margin: 0 }}>
-                Upload your ovarian ultrasound for multi-stage analysis
-              </p>
-            </div>
-
-            <div style={{
-              marginTop: "32px",
-              background: "linear-gradient(135deg, rgba(77, 155, 169, 0.08), rgba(232, 93, 138, 0.08))",
-              border: "2px solid rgba(77, 155, 169, 0.2)",
-              borderRadius: "20px",
-              padding: "56px",
-              animation: "slideInUp 0.8s ease-out 0.2s both"
-            }}>
-              <div style={{
-                border: "2px dashed rgba(77, 155, 169, 0.3)",
-                borderRadius: "12px",
-                padding: "60px 20px",
-                textAlign: "center",
-                marginBottom: "28px",
-                background: "rgba(77, 155, 169, 0.05)",
-                transition: "all 0.3s ease"
-              }}>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setImage(e.target.files?.[0] || "")}
-                style={{ display: "none" }}
-                id="imageInput"
-              />
-              <label
-                htmlFor="imageInput"
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "12px",
-                  cursor: "pointer"
-                }}
-              >
-                <Upload size={40} color="#4d9ba9" />
-                <div>
-                  <div style={{ fontWeight: 700, marginBottom: "4px" }}>Click to upload or drag and drop</div>
-                  <div style={{ color: "#7a7a8e", fontSize: "14px" }}>PNG, JPG, GIF up to 10MB</div>
-                </div>
-              </label>
-              {image && (
-                <div style={{ marginTop: "16px", color: "#10b981", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                  <CheckCircle size={20} />
-                  {image.name}
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={handleImageUpload}
-              disabled={!image || uploading}
-              style={{
-                width: "100%",
-                padding: "16px 40px",
-                background: (!image || uploading) ? "rgba(77, 155, 169, 0.3)" : "linear-gradient(135deg, #4d9ba9, #7fb8c4)",
-                border: "none",
-                borderRadius: "12px",
-                color: "#fff",
-                fontSize: "16px",
-                fontWeight: 700,
-                cursor: (!image || uploading) ? "not-allowed" : "pointer",
-                transition: "all 0.3s ease"
-              }}
-              onMouseEnter={(e) => {
-                if (image && !uploading) {
-                  e.target.style.transform = "translateY(-4px)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = "translateY(0)";
-              }}
-            >
-              {uploading ? "Uploading..." : "Upload Ultrasound"}
-            </button>
-
-            {uploadMsg && (
-              <div style={{
-                marginTop: "16px",
-                padding: "12px",
-                background: uploadMsg.includes("Error") ? "rgba(239, 68, 68, 0.1)" : "rgba(16, 185, 129, 0.1)",
-                border: `1px solid ${uploadMsg.includes("Error") ? "rgba(239, 68, 68, 0.3)" : "rgba(16, 185, 129, 0.3)"}`,
-                borderRadius: "8px",
-                color: uploadMsg.includes("Error") ? "#ff7070" : "#10b981",
-                fontSize: "14px",
-                fontWeight: 600
-              }}>
-                {uploadMsg}
-              </div>
-            )}
-          </div>
-        </>
-        )}
+       {analysisData && <Ultrasound analysisData={analysisData} />}
+ 
       </main>
 
       <style>{`
