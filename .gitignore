@@ -1,0 +1,27 @@
+# ===== Python =====
+venv/
+backend/venv/
+__pycache__/
+*.pyc
+
+# ===== Node =====
+node_modules/
+
+# ===== ML / AI =====
+*.npy
+*.h5
+*.pt
+*.pth
+
+ml/ultrasound/X_train.npy
+ml/ultrasound/X_test.npy
+ml/ultrasound/*.npy
+ml/ultrasound/*.h5
+
+# ===== Uploads =====
+uploads/
+data/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
