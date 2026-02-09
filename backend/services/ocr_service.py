@@ -71,18 +71,56 @@ def extract_lab_values(text):
 # -------------------------------
 def check_pcos(lab_values):
     """
-    Uses LH/FSH ratio to suggest PCOS.
+    Determines PCOS likelihood using:
+    - LH/FSH ratio
+    - Testosterone level (fallback)
     """
-    try:
-        lh = float(lab_values.get("LH", 0))
-        fsh = float(lab_values.get("FSH", 1))  # avoid division by 0
-        ratio = lh / fsh
-        if ratio > 2:
-            return "Possible PCOS (LH/FSH ratio > 2)"
-        else:
-            return "PCOS not indicated based on LH/FSH"
-    except Exception as e:
-        return "Insufficient data to determine PCOS"
+
+    lh = lab_values.get("LH")
+    fsh = lab_values.get("FSH")
+    testosterone = lab_values.get("Testosterone")
+
+    # -------------------------
+    # Case 1: LH and FSH present
+    # -------------------------
+    if lh and fsh:
+        try:
+            lh = float(lh)
+            fsh = float(fsh)
+
+            if fsh == 0:
+                return "Insufficient hormone data to assess PCOS"
+
+            ratio = lh / fsh
+
+            if ratio > 2:
+                return "Possible PCOS (Elevated LH/FSH ratio)"
+            else:
+                return "PCOS not indicated based on LH/FSH ratio"
+
+        except ValueError:
+            return "Invalid LH/FSH values detected"
+
+    # -----------------------------------
+    # Case 2: LH missing, Testosterone high
+    # -----------------------------------
+    if testosterone:
+        try:
+            testosterone = float(testosterone)
+
+            # Typical PCOS threshold
+            if testosterone > 70:
+                return "Possible PCOS (Elevated Testosterone level)"
+            else:
+                return "PCOS not indicated (Testosterone within normal range)"
+
+        except ValueError:
+            return "Invalid Testosterone value detected"
+
+    # -------------------------
+    # Case 3: Not enough data
+    # -------------------------
+    return "Insufficient hormone data to assess PCOS"
 
 # -------------------------------
 # Main: Process all images in backend/uploads folder
