@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Upload, CheckCircle } from "lucide-react";
+import LabReportUpload from "./LabReportUpload";
 
 function Ultrasound({ analysisData }) {
   const [image, setImage] = useState(null);
@@ -250,7 +251,12 @@ function Ultrasound({ analysisData }) {
           </div>
         </>
       )}
-
+  
+{result && (
+  <div style={{ marginTop: "40px" }}>
+    <LabReportUpload />
+  </div>
+)}
       <style>{`
         @keyframes slideInUp {
           from { opacity: 0; transform: translateY(20px); }

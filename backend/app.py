@@ -5,7 +5,7 @@ import os
 import json
 from PIL import Image
 from flask import send_from_directory
-
+from services.ocr_service import extract_text_from_image, extract_lab_values, check_pcos,UPLOAD_FOLDER
 app = Flask(__name__)
 CORS(app)
 
@@ -65,6 +65,36 @@ def serve_heatmap(filename):
 # ------------------------------------------------
 # TODO: Implement actual ultrasound image analysis using computer vision
 # For now, this endpoint is reserved for future development
+
+@app.route("/upload-lab-report", methods=["POST"])
+def upload_labreport():
+    if "image" not in request.files:
+        return jsonify({"error": "No image uploaded"}), 400
+
+    image_file = request.files["image"]
+
+    if image_file.filename == "":
+        return jsonify({"error": "Empty filename"}), 400
+
+    # Save the uploaded lab report
+    save_path = os.path.join(UPLOAD_FOLDER, image_file.filename)
+    image = Image.open(image_file)
+    image.save(save_path)
+
+    # OCR & analysis
+    extracted_text = extract_text_from_image(save_path)
+    lab_values = extract_lab_values(extracted_text)
+    pcos_result = check_pcos(lab_values)
+
+    return jsonify({
+        "message": "Lab report analyzed successfully",
+        "filename": image_file.filename,
+        "extracted_text": extracted_text,
+        "lab_values": lab_values,
+        "pcos_result": pcos_result
+    })
+
+
 
 # ---------------- RUN APP ----------------
 

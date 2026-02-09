@@ -356,7 +356,7 @@ function Diagnose() {
         )}
 
        {analysisData && <Ultrasound analysisData={analysisData} />}
- 
+
       </main>
 
       <style>{`
