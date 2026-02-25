@@ -2,6 +2,8 @@ import { AlertCircle, ArrowLeft, FileText, Heart, Sparkles, Loader } from "lucid
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Ultrasound from "./Ultrasound";
+import LabReportUpload from "./LabReportUpload";
+
 
 function Diagnose() {
   const navigate = useNavigate();
@@ -10,6 +12,12 @@ function Diagnose() {
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [multimodalData, setMultimodalData] = useState({
+  symptom: null,
+  ultrasound: null,
+  lab: null,
+  final: null
+});
 
   const handleSymptomSubmit = async () => {
     setLoading(true);
@@ -59,6 +67,11 @@ function Diagnose() {
                   }]);
                 } else if (chunk.type === "final_result") {
                   setAnalysisData(chunk.data);
+                  setMultimodalData(prev => ({
+  ...prev,
+  symptom: chunk.data
+}));
+
                   setIsStreaming(false);
                 }
               } catch (e) {
@@ -80,6 +93,35 @@ function Diagnose() {
     setIsStreaming(false);
     setLoading(false);
   };
+  const handleFinalResult = async () => {
+  try {
+    // const response = await fetch("http://localhost:5000/generate-final-result");
+    const response = await fetch("http://localhost:5000/generate-final-result", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  }
+});
+
+    const data = await response.json();
+    console.log("FINAL DATA:", data);
+
+    if (!response.ok) {
+      alert(data.error);
+      return;
+    }
+
+    setMultimodalData(prev => ({
+      ...prev,
+      final: data
+}));
+
+  } catch (error) {
+    alert("Failed to generate final result");
+  }
+};
+
+
 
   
 
@@ -355,7 +397,62 @@ function Diagnose() {
           </div>
         )}
 
-       {analysisData && <Ultrasound analysisData={analysisData} />}
+{analysisData && (
+  <Ultrasound 
+    analysisData={analysisData} 
+    setMultimodalData={setMultimodalData}
+  />
+)}
+
+   {multimodalData.ultrasound && (
+  <LabReportUpload
+    multimodalData={multimodalData}
+    setMultimodalData={setMultimodalData}
+  />
+)}
+       {multimodalData.final && (
+  <div style={{
+    marginTop: "60px",
+    padding: "40px",
+    borderRadius: "20px",
+    border: "3px solid rgba(232,93,138,0.4)",
+    background: "linear-gradient(135deg, rgba(232,93,138,0.12), rgba(77,155,169,0.12))"
+  }}>
+    <h2 style={{ fontSize: "36px", fontWeight: 900 }}>
+      🧠 Final PCOS Risk Assessment
+    </h2>
+
+   <h3 style={{
+  color: multimodalData.final.risk === "HIGH" ? "#ef4444" : "#10b981",
+  marginTop: "16px"
+}}>
+  Risk Level: {multimodalData.final.risk}
+</h3>
+
+<p style={{ marginTop: "8px", fontWeight: 600 }}>
+Confidence Score: {multimodalData.final?.score !== undefined
+  ? (multimodalData.final.score * 100).toFixed(1)
+  : 0}%
+
+</p>
+
+    <p style={{ marginTop: "12px", color: "#c0c0d8" }}>
+      {multimodalData.final.explanation}
+    </p>
+
+    <div style={{ marginTop: "24px" }}>
+      <h4>✅ What should you do next?</h4>
+  <ul>
+  {(multimodalData.final?.next_steps || []).map((step, i) => (
+    <li key={i}>{step}</li>
+  ))}
+</ul>
+
+
+    </div>
+  </div>
+)}
+
 
       </main>
 

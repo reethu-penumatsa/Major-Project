@@ -9,11 +9,17 @@ OUTPUT_DIR = "backend/heatmaps"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ----------------------------
-# Load model (Functional-safe)
+# Load model
 # ----------------------------
 model = tf.keras.models.load_model(MODEL_PATH, compile=False)
 
-# Find last conv layer automatically
+# 🔧 FORCE BUILD (CRITICAL FIX)
+dummy_input = tf.zeros((1, IMG_SIZE, IMG_SIZE, 3))
+model(dummy_input)
+
+# ----------------------------
+# Find last conv layer
+# ----------------------------
 last_conv_layer = None
 for layer in reversed(model.layers):
     if isinstance(layer, tf.keras.layers.Conv2D):
@@ -22,9 +28,13 @@ for layer in reversed(model.layers):
 
 print("Using last conv layer:", last_conv_layer)
 
+# ----------------------------
+# Grad-CAM model
+# ----------------------------
 grad_model = tf.keras.models.Model(
     inputs=model.inputs,
-    outputs=[model.get_layer(last_conv_layer).output, model.output]
+    outputs=[model.get_layer(last_conv_layer).output, model.outputs[0]]
+
 )
 
 # ----------------------------
@@ -48,32 +58,33 @@ def generate_gradcam(image_path, filename):
     conv_output = conv_output[0]
     heatmap = tf.reduce_sum(conv_output * pooled_grads, axis=-1)
 
-    # 🔥 Normalize & amplify
+    # Normalize & amplify
     heatmap = np.maximum(heatmap, 0)
     heatmap = heatmap / (np.max(heatmap) + 1e-8)
-
-    # 🔥 Make affected areas POP
     heatmap = np.power(heatmap, 0.3)
 
     heatmap = cv2.resize(heatmap, (IMG_SIZE, IMG_SIZE))
     heatmap_uint8 = np.uint8(255 * heatmap)
 
-    # 🔥 Apply HOT colormap (much stronger than JET)
     heatmap_color = cv2.applyColorMap(heatmap_uint8, cv2.COLORMAP_HOT)
-
-    # 🔥 Overlay with strong contrast
     overlay = cv2.addWeighted(img, 0.35, heatmap_color, 0.65, 0)
 
-    # Save heatmap
     heatmap_path = os.path.join(OUTPUT_DIR, f"heatmap_{filename}")
     cv2.imwrite(heatmap_path, overlay)
 
-    # Risk
     prob = float(prediction[0][0])
-    risk = "HIGH" if prob >= 0.6 else "LOW"
 
     return {
-        "risk": risk,
-        "confidence": round(prob, 3),
-        "heatmap_path": heatmap_path
+        "risk_score": round(prob, 2),
+        "risk_level": "High" if prob >= 0.6 else "Low",
+        "confidence": round(prob, 2),
+        "explanation": (
+            "Ultrasound shows ovarian morphology patterns commonly associated with PCOS."
+            if prob >= 0.6 else
+            "Ultrasound does not show strong PCOS indicators."
+        ),
+        "xai": {
+            "heatmap_path": heatmap_path,
+            "highlighted_regions": "Follicle dense regions"
+        }
     }

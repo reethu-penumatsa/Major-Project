@@ -329,3 +329,34 @@ def analyze_symptoms_with_bert(symptoms):
             "next_step": "ultrasound_analysis",
         }
     }
+def analyze_symptoms_final(symptoms_text):
+    """
+    NON-stream version for multimodal fusion
+    """
+    extracted_symptoms, _ = extract_symptoms_from_input(symptoms_text)
+
+    # Run main logic (reuse your model)
+    gen = analyze_symptoms_with_bert(symptoms_text)
+    final_chunk = None
+    for chunk in gen:
+        if chunk["type"] == "final_result":
+            final_chunk = chunk["data"]
+
+    risk_level = final_chunk["result"]["pcos_risk"]
+    confidence = final_chunk["result"]["confidence"] / 100
+
+    risk_score = confidence if risk_level == "High" else (1 - confidence)
+
+    return {
+        "risk_score": round(risk_score, 2),
+        "risk_level": risk_level,
+        "confidence": round(confidence, 2),
+        "explanation": f"Detected symptoms: {', '.join(extracted_symptoms)}",
+        "xai": {
+            "symptoms": extracted_symptoms,
+            "primary_symptoms": [
+                s for s in extracted_symptoms
+                if s in ["irregular periods", "infertility"]
+            ]
+        }
+    }

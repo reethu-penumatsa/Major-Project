@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Upload, CheckCircle } from "lucide-react";
 import LabReportUpload from "./LabReportUpload";
 
-function Ultrasound({ analysisData }) {
+function Ultrasound({ analysisData, setMultimodalData }) 
+ {
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState("");
@@ -33,9 +34,27 @@ function Ultrasound({ analysisData }) {
 
       const data = await response.json();
       console.log("Ultrasound response:", data);
+      await fetch("http://localhost:5000/store-ultrasound-result", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    risk_score: data.risk === "HIGH" ? 0.8 : 0.2,
+    prediction: data.risk,
+    confidence: data.confidence,
+    xai: {
+      explanation: data.explanation,
+    }
+  })
+});
 
       setResult(data);
+
       setUploadMsg("Ultrasound uploaded and analyzed successfully ✔️");
+      setMultimodalData(prev => ({
+  ...prev,
+  ultrasound: data
+}));
+
     } catch (err) {
       console.error(err);
       setUploadMsg("Error uploading image. Please try again.");
@@ -233,6 +252,7 @@ function Ultrasound({ analysisData }) {
   <div style={{ textAlign: "center", marginTop: "24px" }}>
     <img
       src={result.heatmap_url}
+
       alt="PCOS Heatmap"
       style={{
         width: "420px",          // 🔑 reduced size
@@ -252,11 +272,7 @@ function Ultrasound({ analysisData }) {
         </>
       )}
   
-{result && (
-  <div style={{ marginTop: "40px" }}>
-    <LabReportUpload />
-  </div>
-)}
+
       <style>{`
         @keyframes slideInUp {
           from { opacity: 0; transform: translateY(20px); }

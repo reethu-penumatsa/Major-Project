@@ -9,8 +9,13 @@ ultrasound_bp = Blueprint("ultrasound", __name__)
 # ===============================
 # PATH SETUP (VERY IMPORTANT)
 # ===============================
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_DIR, "ml", "ultrasound", "pcos_cnn_model.h5")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
+
+MODEL_PATH = os.path.join(
+    PROJECT_ROOT, "ml", "ultrasound", "pcos_cnn_model.h5"
+)
+
 
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "backend", "uploads")
 HEATMAP_FOLDER = os.path.join(BASE_DIR, "backend", "heatmaps")
@@ -38,7 +43,7 @@ x = tf.keras.layers.Dense(64, activation="relu")(x)
 outputs = tf.keras.layers.Dense(1, activation="sigmoid")(x)
 
 model = tf.keras.Model(inputs, outputs)
-model.load_weights(MODEL_PATH)
+#model.load_weights(MODEL_PATH)
 
 # ===============================
 # GRAD-CAM MODEL
@@ -117,11 +122,12 @@ def ultrasound_check():
             "No significant follicular clustering is observed, which is "
             "typically indicative of normal ovarian morphology."
         )
-
+    os.remove(img_path)
     return jsonify({
-        "risk": risk,
+         "risk_score": float(prob),
+        "prediction": risk,
         "confidence": round(prob * 100, 2),  # percentage looks better
         "heatmap_url": f"http://127.0.0.1:5000/heatmaps/{filename}",
-        "explanation": explanation
+        "xai": explanation
     })
 

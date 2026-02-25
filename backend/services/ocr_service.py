@@ -30,33 +30,35 @@ def extract_text_from_image(image_path):
 
     # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray = cv2.resize(gray, None, fx=1.5, fy=1.5)
+    gray = cv2.GaussianBlur(gray, (3, 3), 0)
     # Apply thresholding to improve OCR accuracy
     _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
 
     # Extract text using pytesseract
-    text = pytesseract.image_to_string(thresh)
+    text = pytesseract.image_to_string(thresh, config="--psm 6")
+    
+    print("\n================ OCR TEXT ================\n")
+    print(text)
+    print("\n==========================================\n")
     return text
 
 # -------------------------------
 # Function: Extract lab test values
 # -------------------------------
 def extract_lab_values(text):
-    """
-    Extracts common hormone lab tests using regex.
-    Returns a dictionary of test names and values.
-    """
     lab_data = {}
+    if not text:
+        return lab_data
+    text = text.replace(",", "")
 
-    # Clean text to reduce OCR errors
-    text = text.replace(",", "").replace("l", "1")
-
-    # Updated regex patterns with flexible parentheses handling
     patterns = {
-        "LH": r"LH\s*(?:\([^\)]*\))?\s*[-:]?\s*(\d+\.?\d*)",
-        "FSH": r"FSH\s*(?:\([^\)]*\))?\s*[-:]?\s*(\d+\.?\d*)",
-        "Testosterone": r"Testosterone\s*[-:]?\s*(\d+\.?\d*)",
-        "Prolactin": r"Prolactin\s*[-:]?\s*(\d+\.?\d*)",
-        "Estradiol": r"(Estradiol|E2)\s*[-:]?\s*(\d+\.?\d*)"
+        # Capture LH value followed by IU (avoid ratio)
+        "LH": r"L\s*H\s*(?:\([^\)]*\))?[^0-9]*([\d.]+)\s*IU",
+        "FSH": r"F\s*S\s*H\s*(?:\([^\)]*\))?[^0-9]*([\d.]+)\s*IU",
+        "Testosterone": r"Testosterone[^0-9]*([\d.]+)",
+        "Prolactin": r"Prolactin[^0-9]*([\d.]+)",
+        "Estradiol": r"(?:Estradiol|E2)[^0-9]*([\d.]+)"
     }
 
     for test, pattern in patterns.items():
@@ -64,7 +66,9 @@ def extract_lab_values(text):
         if match:
             lab_data[test] = match.group(1)
 
+    print("\nExtracted Lab Values:", lab_data)  # DEBUG
     return lab_data
+
 
 # -------------------------------
 # Function: Check PCOS
@@ -83,7 +87,7 @@ def check_pcos(lab_values):
     # -------------------------
     # Case 1: LH and FSH present
     # -------------------------
-    if lh and fsh:
+    if lh is not None and fsh is not None:
         try:
             lh = float(lh)
             fsh = float(fsh)
@@ -104,7 +108,7 @@ def check_pcos(lab_values):
     # -----------------------------------
     # Case 2: LH missing, Testosterone high
     # -----------------------------------
-    if testosterone:
+    if testosterone is not None:
         try:
             testosterone = float(testosterone)
 
@@ -125,3 +129,25 @@ def check_pcos(lab_values):
 # -------------------------------
 # Main: Process all images in backend/uploads folder
 # -------------------------------
+def analyze_lab_report(image_path):
+    text = extract_text_from_image(image_path)
+    lab_values = extract_lab_values(text)
+    assessment = check_pcos(lab_values)
+
+    # Risk scoring logic
+    risk_score = 0.4
+    if "Possible PCOS" in assessment:
+        risk_score = 0.75
+
+    return {
+        "lab_values": lab_values,
+        "pcos_result": assessment,
+        "risk_score": risk_score,
+        "risk_level": "High" if risk_score >= 0.6 else "Low",
+        "confidence": round(risk_score, 2),
+        "explanation": assessment,
+        "xai": {
+            "lab_values": lab_values,
+            "logic": "LH/FSH ratio and testosterone threshold"
+        }
+    }
