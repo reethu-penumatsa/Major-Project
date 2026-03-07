@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from services.symptom_service import analyze_symptoms_with_bert
+from routes.auth import auth_bp
+from routes.progress import progress_bp
+
 
 # -------------------------
 # CREATE APP FIRST
@@ -17,6 +20,8 @@ app.register_blueprint(ultrasound_bp)
 # -------------------------
 # BASIC ROUTES
 # -------------------------
+app.register_blueprint(auth_bp, url_prefix="/api/auth")
+app.register_blueprint(progress_bp, url_prefix="/api/progress")
 @app.route("/")
 def home():
     return "PCOSight Backend is Running"
