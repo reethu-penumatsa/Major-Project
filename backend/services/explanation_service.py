@@ -1,83 +1,157 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
-# Load once
 tokenizer = AutoTokenizer.from_pretrained("distilgpt2")
 model = AutoModelForCausalLM.from_pretrained("distilgpt2")
 model.eval()
 
+
+# def generate_explanation(symptom, ultrasound, lab, final_risk, final_score):
+
+#     prompt = f"""
+# You are a medical AI assistant analyzing PCOS risk.
+
+# Patient data:
+
+# Symptoms: {symptom.get('symptom_list')}
+# Symptom risk: {symptom['prediction']} ({symptom['confidence']})
+
+# Ultrasound interpretation:
+# {ultrasound.get('xai')}
+# Ultrasound risk: {ultrasound['prediction']} ({ultrasound['confidence']})
+
+# Lab findings:
+# {lab.get('xai')}
+# Lab risk: {lab['prediction']} ({lab['confidence']})
+
+# Final fused risk: {final_risk}
+# Probability: {final_score}
+
+# You are a clinical reasoning assistant.
+
+# Explain the PCOS risk decision using:
+# - symptoms
+# - ultrasound findings
+# - hormone levels
+
+# Be concise, medically grounded, and under 80 words.
+
+# Then list exactly 3 recommended next steps.
+# """
+
+
+
+#     inputs = tokenizer(prompt, return_tensors="pt", truncation=True)
+
+#     input_ids = inputs["input_ids"]
+#     attention_mask = inputs["attention_mask"]
+
+#     with torch.no_grad():
+#         output = model.generate(
+#             input_ids=input_ids,
+#             attention_mask=attention_mask,
+#             max_new_tokens=120,
+#             do_sample=True,                 # REQUIRED for temperature/top_p
+#             temperature=0.5,
+#             top_p=0.85,
+#             repetition_penalty=1.3,
+#             no_repeat_ngram_size=3,
+#             pad_token_id=tokenizer.eos_token_id
+#         )
+
+
+
+#     generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
+
+#     # Remove prompt from output
+#     explanation = generated_text[len(prompt):].strip()
+
+#     # Remove weird numbered continuation
+#     if "7." in explanation:
+#         explanation = explanation.split("7.")[0]
+
+#     # Safety fallback
+#     if len(explanation) < 40:
+#         explanation = "Based on combined findings, the overall PCOS risk appears low. Clinical monitoring is recommended."
+
+#     return explanation
 def generate_explanation(symptom, ultrasound, lab, final_risk, final_score):
 
-    prompt = f"""
-You are a clinical decision support assistant for PCOS risk evaluation.
+    # ---------------- CLEAN DATA ----------------
+# -----------------------------
+# SYMPTOMS (FIXED)
+# -----------------------------
+    symptom_list = symptom.get("xai", {}).get("symptoms", [])
 
-Analyze the following multimodal results carefully and generate a concise,
-safe, and medically appropriate explanation.
+    if not symptom_list or symptom_list == ["other"]:
+        symptom_text = "No significant symptoms detected"
+    else:
+        symptom_text = ", ".join(symptom_list)
 
---- Patient Assessment Data ---
-Symptom Model Prediction: {symptom['prediction']}
-Symptom Confidence: {symptom['confidence']}
+    symptom_risk = symptom.get("risk_level", "Low")
+    symptom_conf = round(float(symptom.get("confidence", 0)) * 100, 2)
+    #us_conf = round(ultrasound.get("confidence", 0) * 100, 2)
+    #lab_conf = round(lab.get("confidence", 0) * 100, 2)
+    
 
-Ultrasound Prediction: {ultrasound['prediction']}
-Ultrasound Confidence: {ultrasound['confidence']}
+        # -----------------------------
+    # ULTRASOUND (FIXED)
+    # -----------------------------
+    us_risk = ultrasound.get("risk_level", "Low")
+    us_conf = round(float(ultrasound.get("confidence", 0)) * 100, 2)
 
-Lab Result: {lab['prediction']}
-Lab Confidence: {lab['confidence']}
+    if ultrasound.get("prediction") is None:
+        us_text = "No significant ovarian abnormalities detected"
+    else:
+        us_text = ultrasound.get("xai", {}).get("reason", "Ultrasound analysis completed")
+        lab_xai = lab.get("xai", "Hormone levels within normal range")
+   # -----------------------------
+    # LAB (FIXED)
+    # -----------------------------
+    lab_risk = lab.get("risk_level", "Low")
+    lab_conf = round(float(lab.get("confidence", 0)) * 100, 2)
+    lab_text = lab.get("xai", {}).get("reason", "Hormone levels within normal range")
+    final_conf = round(final_score * 100, 2)
+    # ---------------- SECTION 1 ----------------
+    analysis_text = (
+        f"Symptoms: {symptom_text}. "
+        f"Ultrasound: {us_text}. "
+        f"Lab findings: {lab_xai}."
+    )
 
-Final Combined Risk: {final_risk}
-Final Probability Score: {final_score}
+    # ---------------- SECTION 2 ----------------
+    risk_text = (
+        f"The combined analysis indicates a {final_risk} PCOS risk "
+        f"with a confidence of {final_conf}%."
+    )
 
---- Instructions ---
-1. Explain why the final risk is {final_risk}.
-2. If models disagree, explain how confidence influenced the final decision.
-3. Do NOT mention death or unrelated conditions.
-4. Keep explanation under 120 words.
-5. Provide 3 clear next-step recommendations based on the risk level.
-6. Use calm and non-alarming language.
+    # ---------------- SECTION 3 ----------------
+    if final_risk == "HIGH":
+        next_steps = [
+            "Consult a gynecologist for further evaluation",
+            "Perform detailed hormonal testing",
+            "Adopt lifestyle changes (diet & exercise)"
+        ]
+    else:
+        next_steps = [
+            "Monitor symptoms regularly",
+            "Maintain a healthy lifestyle",
+            "Consult a doctor if symptoms persist"
+        ]
 
-Output format:
-
-Explanation:
-<text>
-
-Next Steps:
-1.
-2.
-3.
-"""
-
-
-    inputs = tokenizer(prompt, return_tensors="pt", truncation=True)
-
-    input_ids = inputs["input_ids"]
-    attention_mask = inputs["attention_mask"]
-
-    with torch.no_grad():
-        output = model.generate(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            max_new_tokens=120,
-            do_sample=True,                 # REQUIRED for temperature/top_p
-            temperature=0.5,
-            top_p=0.85,
-            repetition_penalty=1.3,
-            no_repeat_ngram_size=3,
-            pad_token_id=tokenizer.eos_token_id
-        )
-
-
-
-    generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-
-    # Remove prompt from output
-    explanation = generated_text[len(prompt):].strip()
-
-    # Remove weird numbered continuation
-    if "7." in explanation:
-        explanation = explanation.split("7.")[0]
-
-    # Safety fallback
-    if len(explanation) < 40:
-        explanation = "Based on combined findings, the overall PCOS risk appears low. Clinical monitoring is recommended."
-
-    return explanation
+    return {
+        "sections" : [
+    {
+        "title": "📋 Multimodal Analysis",
+        "content": f"Symptoms: {symptom_text}. Ultrasound: {us_text}. Lab findings: {lab_text}."
+    },
+    {
+        "title": "⚕️ Risk Assessment",
+        "content": f"The combined analysis indicates a {final_risk} PCOS risk with a confidence of {final_conf}%."
+    },
+    {
+        "title": "🔍 Next Steps",
+        "content": next_steps
+    }
+]
+    }

@@ -38,7 +38,7 @@ function Ultrasound({ analysisData, setMultimodalData })
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    risk_score: data.risk === "HIGH" ? 0.8 : 0.2,
+    risk_score: data.prediction === "HIGH" ? 0.8 : 0.2,
     prediction: data.risk,
     confidence: data.confidence,
     xai: {

@@ -437,19 +437,42 @@ Confidence Score: {multimodalData.final?.score !== undefined
 </p>
 
     <p style={{ marginTop: "12px", color: "#c0c0d8" }}>
-      {multimodalData.final.explanation}
+      {multimodalData.final.sections?.map((section, index) => (
+  <div key={index} style={{ marginTop: "20px" }}>
+
+    {/* Section Title */}
+    <div style={{
+      fontSize: "18px",
+      fontWeight: "800",
+      color: "#e85d8a",
+      marginBottom: "10px"
+    }}>
+      {section.title}
+    </div>
+
+    {/* Section Content */}
+    {Array.isArray(section.content) ? (
+      <ul style={{ paddingLeft: "20px", color: "#c0c0d8" }}>
+        {section.content.map((item, i) => (
+          <li key={i} style={{ marginBottom: "6px" }}>{item}</li>
+        ))}
+      </ul>
+    ) : (
+      <p style={{
+        color: "#c0c0d8",
+        lineHeight: 1.7,
+        borderLeft: "4px solid #e85d8a",
+        paddingLeft: "12px"
+      }}>
+        {section.content}
+      </p>
+    )}
+
+  </div>
+))}
     </p>
 
-    <div style={{ marginTop: "24px" }}>
-      <h4>✅ What should you do next?</h4>
-  <ul>
-  {(multimodalData.final?.next_steps || []).map((step, i) => (
-    <li key={i}>{step}</li>
-  ))}
-</ul>
-
-
-    </div>
+    
   </div>
 )}
 

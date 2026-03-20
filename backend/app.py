@@ -14,7 +14,7 @@ from services.ocr_service import (
 from services.multimodal_service import multimodal_fusion
 
 from ultrasound_api import ultrasound_bp
-
+from flask import send_from_directory
 app = Flask(__name__)
 CORS(app)
 
@@ -169,12 +169,11 @@ def generate_final_result():
     return jsonify(final_result)
 
 # 🔥 SERVE HEATMAP IMAGES
-@app.route("/heatmaps/<filename>")
+
+
+@app.route('/heatmaps/<filename>')
 def serve_heatmap(filename):
-    return send_from_directory(
-        os.path.join(BASE_DIR, "heatmaps"),
-        filename
-    )
+    return send_from_directory("backend/heatmaps", filename)
 
 # ---------------- RUN APP ----------------
 
