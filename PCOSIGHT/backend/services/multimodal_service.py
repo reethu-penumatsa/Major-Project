@@ -48,37 +48,15 @@ def multimodal_fusion(symptom, ultrasound, lab):
     final_risk = "HIGH" if final_prob >= 0.6 else "LOW"
 
     # ---- Intelligent XAI Explanation ----
-    explanation_parts = []
+    explanation = generate_explanation(
+    symptom,
+    ultrasound,
+    lab,
+    final_risk,
+    round(final_prob, 2)
+)
 
-    if symptom["risk_score"] > 0.5:
-        explanation_parts.append(
-            "Reported symptoms suggest possible hormonal imbalance."
-        )
-
-    if ultrasound["risk_score"] > 0.5:
-        explanation_parts.append(
-            "Ultrasound findings show ovarian morphology associated with PCOS."
-        )
-    else:
-        explanation_parts.append(
-            "Ultrasound does not show strong PCOS indicators."
-        )
-
-    if lab["risk_score"] > 0.5:
-        explanation_parts.append(
-            "Hormone levels are outside normal range."
-        )
-    else:
-        explanation_parts.append(
-            "Hormone levels appear within normal range."
-        )
-
-    explanation_parts.append(
-        f"Overall combined risk assessment is {final_risk} with probability {round(final_prob,2)}."
-    )
-
-    explanation = " ".join(explanation_parts)
-
+    
     # ---- Dynamic Next Steps ----
     if final_risk == "HIGH":
         next_steps = [
@@ -94,8 +72,7 @@ def multimodal_fusion(symptom, ultrasound, lab):
         ]
 
     return {
-        "risk": final_risk,
-        "score": round(final_prob, 2),
-        "explanation": explanation,
-        "next_steps": next_steps
-    }
+    "risk": final_risk,
+    "score": round(final_prob, 2),
+    "sections": explanation["sections"]
+}
