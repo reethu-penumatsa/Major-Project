@@ -1,4 +1,5 @@
 import os
+from unittest import result
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -91,8 +92,8 @@ def ultrasound_check():
     img_color = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  
     img_norm = img_resized / 255.0
     img_tensor = np.expand_dims(img_norm, axis=0)
-    result = generate_gradcam(img_path, filename)
-
+    result = generate_gradcam(img_path, filename, model)
+    heatmap_filename = os.path.basename(result["xai"]["heatmap_path"]) if result["xai"]["heatmap_path"] else None
     if isinstance(result, tuple):  # error case
         return result
 
@@ -118,5 +119,5 @@ def ultrasound_check():
     "risk": risk,
     "confidence":  round(result["confidence"] * 100, 2),
     "explanation": explanation,
-    "heatmap_url": f"http://127.0.0.1:5000/heatmaps/{filename}"
+    "heatmap_url": f"http://127.0.0.1:5000/heatmaps/{heatmap_filename}" if heatmap_filename else None
 })

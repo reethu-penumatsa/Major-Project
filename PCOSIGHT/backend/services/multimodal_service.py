@@ -41,19 +41,31 @@ def multimodal_fusion(symptom, ultrasound, lab):
         lab["risk_score"],
         lab["confidence"]
     ]], dtype=torch.float32)
+    print("\nFUSION INPUT:")
+    print("Symptom:", symptom)
+    print("Ultrasound:", ultrasound)
+    print("Lab:", lab)
 
     with torch.no_grad():
         final_prob = fusion_model(input_tensor).item()
+    
+    print("Initial Final prob:", final_prob)
 
-    final_risk = "HIGH" if final_prob >= 0.6 else "LOW"
+        # ✅ Apply override FIRST
+    if symptom["risk_score"] > 0.6 and ultrasound["risk_score"] > 0.7:
+        final_prob = max(final_prob, 0.7)
 
+    print("Adjusted Final prob:", final_prob)
+
+# ✅ NOW decide risk
+    final_risk = "HIGH" if final_prob >= 0.5 else "LOW"
     # ---- Intelligent XAI Explanation ----
     explanation = generate_explanation(
     symptom,
     ultrasound,
     lab,
     final_risk,
-    round(final_prob, 2)
+    final_prob
 )
 
     

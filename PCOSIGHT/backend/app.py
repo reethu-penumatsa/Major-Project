@@ -60,20 +60,28 @@ def symptom_check():
                 yield f"data: {chunk}\n\n"
             elif isinstance(chunk, dict):
 
-    # Store structured version for fusion
-                risk_score = 0.8 if chunk.get("prediction", "").lower() == "high" else 0.2
+                # ✅ Only handle final result
+                if chunk.get("type") == "final_result":
 
-                analysis_store["symptom"] = {
-                    "risk_score": risk_score,
-                    "confidence": chunk.get("confidence", 0.5),  
-                    "prediction": chunk.get("prediction"),
-                    "xai": chunk.get("xai", {})
-                }
+                    final_data = chunk["data"]
 
-                # 🔥 Send original chunk to frontend
+                    prediction = final_data["result"]["pcos_risk"]
+                    confidence = final_data["result"]["confidence"] / 100
+
+                    risk_score = confidence 
+
+                    analysis_store["symptom"] = {
+                        "risk_score": risk_score,
+                        "confidence": confidence,
+                        "prediction": prediction,
+                        "xai": {
+                            "symptoms": final_data.get("extracted_symptoms", [])
+                        }
+                    }
+
+                # 🔥 Always stream chunk
                 yield "event: final\n"
                 yield f"data: {json.dumps(chunk)}\n\n"
-
 
             # elif isinstance(chunk, dict):
             #     # ✅ STORE FINAL SYMPTOM RESULT
@@ -144,7 +152,9 @@ def store_ultrasound_result():
         "risk_score": risk_score,
         "prediction": data.get("prediction"),
         "confidence": confidence,
-        "xai": data.get("xai"),             
+        "xai": {
+        "reason": data.get("xai", {}).get("explanation", "Ultrasound analysis completed")
+    },            
         "heatmap_url": data.get("heatmap_url")  
     }
 

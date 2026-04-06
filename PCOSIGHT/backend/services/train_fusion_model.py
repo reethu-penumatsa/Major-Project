@@ -12,7 +12,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 X = []
 y = []
 
-for _ in range(5000):
+for _ in range(10000):
 
     s_risk = np.random.uniform(0, 1)
     s_conf = np.random.uniform(0.5, 1)
@@ -25,10 +25,10 @@ for _ in range(5000):
 
     # Intelligent rule (pseudo ground truth)
     weighted_score = (
-        s_risk * s_conf * 0.3 +
-        u_risk * u_conf * 0.4 +
-        l_risk * l_conf * 0.3
-    )
+    0.3 * s_risk * s_conf +
+    0.5 * u_risk * u_conf +
+    0.2 * l_risk * l_conf
+)
 
     label = 1 if weighted_score > 0.6 else 0
 
@@ -50,5 +50,5 @@ for epoch in range(200):
         print(f"Epoch {epoch}, Loss: {loss.item():.4f}")
 
 # Save model
-torch.save(model.state_dict(), "backend/services/fusion_model.pth")
+torch.save(model.state_dict(), "services/fusion_model.pth")
 print("✅ Fusion model trained and saved")

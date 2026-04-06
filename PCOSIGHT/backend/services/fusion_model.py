@@ -22,7 +22,7 @@ class ConfidenceAwareFusion(nn.Module):
 fusion_model = ConfidenceAwareFusion()
 
 # Load trained weights if available
-MODEL_PATH = "backend/services/fusion_model.pth"
+MODEL_PATH = "services/fusion_model.pth"
 
 try:
     fusion_model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
